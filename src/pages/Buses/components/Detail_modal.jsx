@@ -19,10 +19,8 @@ export const ModalDetails = ({ activeTab, showDetailsModal, setShowDetailsModal,
     const getStatusColor = (status) => {
         const statusColors = {
             // Statuts Bus
-            'DISPONIBLE': 'bg-green-100 text-green-800',
-            'EN_SERVICE': 'bg-blue-100 text-blue-800',
-            'MAINTENANCE': 'bg-yellow-100 text-yellow-800',
-            'HORS_SERVICE': 'bg-red-100 text-red-800',
+            'En service': 'bg-blue-100 text-blue-800',
+            'En maintenance': 'bg-yellow-100 text-yellow-800',
             // Statuts Station
             'ACTIVE': 'bg-green-100 text-green-800',
             'INACTIVE': 'bg-red-100 text-red-800'
@@ -33,10 +31,8 @@ export const ModalDetails = ({ activeTab, showDetailsModal, setShowDetailsModal,
     // Fonction pour formater le statut
     const formatStatus = (status) => {
         const statusLabels = {
-            'DISPONIBLE': 'Disponible',
-            'EN_SERVICE': 'En Service',
-            'MAINTENANCE': 'Maintenance',
-            'HORS_SERVICE': 'Hors Service',
+            'En service': 'En Service',
+            'En maintenance': 'Maintenance',
             'ACTIVE': 'Actif',
             'INACTIVE': 'Inactif',
             'ARRET_NORMAL': 'Arrêt Normal',
@@ -69,8 +65,7 @@ export const ModalDetails = ({ activeTab, showDetailsModal, setShowDetailsModal,
                         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg border border-blue-100">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <h3 className="text-2xl font-bold text-gray-800">{detailsItem.bus_number}</h3>
-                                    <p className="text-gray-600 mt-1">{detailsItem.modele}</p>
+                                    <h3 className="text-2xl font-bold text-gray-800">{detailsItem.busNumber}</h3>
                                 </div>
                                 <div className="text-right">
                                     <span className={`px-4 py-2 rounded-full text-sm font-medium ${getStatusColor(detailsItem.status)}`}>
@@ -80,7 +75,6 @@ export const ModalDetails = ({ activeTab, showDetailsModal, setShowDetailsModal,
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             {/* Informations générales */}
                             <div className="bg-white border border-gray-200 rounded-lg p-6">
                                 <h4 className="flex items-center text-lg font-semibold text-gray-800 mb-4">
@@ -90,15 +84,11 @@ export const ModalDetails = ({ activeTab, showDetailsModal, setShowDetailsModal,
                                 <div className="space-y-3">
                                     <div className="flex justify-between items-center py-2 border-b border-gray-100">
                                         <span className="text-gray-600">Numéro:</span>
-                                        <span className="font-medium text-gray-800">{detailsItem.bus_number}</span>
+                                        <span className="font-medium text-gray-800">{detailsItem.busNumber}</span>
                                     </div>
                                     <div className="flex justify-between items-center py-2 border-b border-gray-100">
                                         <span className="text-gray-600">Immatriculation:</span>
-                                        <span className="font-medium text-gray-800">{detailsItem.immatriculation}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                                        <span className="text-gray-600">Modèle:</span>
-                                        <span className="font-medium text-gray-800">{detailsItem.modele}</span>
+                                        <span className="font-medium text-gray-800">{detailsItem.matriculation}</span>
                                     </div>
                                     <div className="flex justify-between items-center py-2 border-b border-gray-100">
                                         <span className="text-gray-600">Capacité:</span>
@@ -113,39 +103,13 @@ export const ModalDetails = ({ activeTab, showDetailsModal, setShowDetailsModal,
                                 </div>
                             </div>
 
-                            {/* Affectation */}
-                            <div className="bg-white border border-gray-200 rounded-lg p-6">
-                                <h4 className="flex items-center text-lg font-semibold text-gray-800 mb-4">
-                                    <Settings className="w-5 h-5 mr-2 text-green-600"/>
-                                    Affectation
-                                </h4>
-                                <div className="space-y-3">
-                                    <div className="py-2 border-b border-gray-100">
-                                        <span className="text-gray-600 block mb-1">Ligne assignée:</span>
-                                        <span className="font-medium text-gray-800">
-                                            {getRouteName(detailsItem.route_id)}
-                                        </span>
-                                    </div>
-                                    <div className="py-2">
-                                        <span className="text-gray-600 block mb-1">Chauffeur:</span>
-                                        <div className="flex items-center">
-                                            <User className="w-4 h-4 mr-2 text-gray-400"/>
-                                            <span className="font-medium text-gray-800">
-                                                {detailsItem.chauffeur || 'Non assigné'}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
                         {/* Informations supplémentaires */}
                         <div className="bg-white border border-gray-200 rounded-lg p-6">
                             <h4 className="flex items-center text-lg font-semibold text-gray-800 mb-4">
                                 <Calendar className="w-5 h-5 mr-2 text-purple-600"/>
                                 Informations supplémentaires
                             </h4>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="text-center p-4 bg-gray-50 rounded-lg">
                                     <div className="text-2xl font-bold text-blue-600">
                                         {detailsItem.capacity}
@@ -158,12 +122,6 @@ export const ModalDetails = ({ activeTab, showDetailsModal, setShowDetailsModal,
                                     </div>
                                     <div className="text-sm text-gray-600">En service</div>
                                 </div>
-                                <div className="text-center p-4 bg-gray-50 rounded-lg">
-                                    <div className="text-2xl font-bold text-orange-600">
-                                        {detailsItem.route_id ? '✓' : '○'}
-                                    </div>
-                                    <div className="text-sm text-gray-600">Ligne assignée</div>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -172,13 +130,6 @@ export const ModalDetails = ({ activeTab, showDetailsModal, setShowDetailsModal,
                         {/* En-tête avec statut */}
                         <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-lg border border-green-100">
                             <div className="flex items-center justify-between">
-                                <div>
-                                    <h3 className="text-2xl font-bold text-gray-800">{detailsItem.station_name}</h3>
-                                    <p className="text-gray-600 mt-1 flex items-center">
-                                        <MapPin className="w-4 h-4 mr-1"/>
-                                        {detailsItem.quartier}
-                                    </p>
-                                </div>
                                 <div className="text-right">
                                     <span className={`px-4 py-2 rounded-full text-sm font-medium ${getStatusColor(detailsItem.status)}`}>
                                         {formatStatus(detailsItem.status)}
@@ -197,15 +148,11 @@ export const ModalDetails = ({ activeTab, showDetailsModal, setShowDetailsModal,
                                 <div className="space-y-3">
                                     <div className="py-2 border-b border-gray-100">
                                         <span className="text-gray-600 block mb-1">Nom:</span>
-                                        <span className="font-medium text-gray-800">{detailsItem.station_name}</span>
+                                        <span className="font-medium text-gray-800">{detailsItem.stationName}</span>
                                     </div>
                                     <div className="py-2 border-b border-gray-100">
                                         <span className="text-gray-600 block mb-1">Type:</span>
-                                        <span className="font-medium text-gray-800">{formatStatus(detailsItem.station_type)}</span>
-                                    </div>
-                                    <div className="py-2 border-b border-gray-100">
-                                        <span className="text-gray-600 block mb-1">Quartier:</span>
-                                        <span className="font-medium text-gray-800">{detailsItem.quartier}</span>
+                                        <span className="font-medium text-gray-800">{formatStatus(detailsItem.stationType)}</span>
                                     </div>
                                     <div className="py-2">
                                         <span className="text-gray-600 block mb-1">Statut:</span>
@@ -228,37 +175,21 @@ export const ModalDetails = ({ activeTab, showDetailsModal, setShowDetailsModal,
                                         <span className="font-medium text-gray-800">{detailsItem.address}</span>
                                     </div>
                                     <div className="py-2">
-                                        <span className="text-gray-600 block mb-1">Coordonnées GPS:</span>
+                                        <span className="text-gray-600 block mb-1">Latitude:</span>
                                         <span className="font-medium text-gray-800 font-mono text-sm">
-                                            {detailsItem.gps_coordinates}
+                                            {detailsItem.latitude}
+                                        </span>
+                                    </div>
+                                    <div className="py-2">
+                                        <span className="text-gray-600 block mb-1">Longitude:</span>
+                                        <span className="font-medium text-gray-800 font-mono text-sm">
+                                            {detailsItem.longitude}
                                         </span>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Équipements */}
-                        <div className="bg-white border border-gray-200 rounded-lg p-6">
-                            <h4 className="flex items-center text-lg font-semibold text-gray-800 mb-4">
-                                <Wrench className="w-5 h-5 mr-2 text-orange-600"/>
-                                Équipements disponibles
-                            </h4>
-                            {detailsItem.equipements && detailsItem.equipements.length > 0 ? (
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                    {detailsItem.equipements.map((equipement, index) => (
-                                        <div key={index} className="flex items-center p-3 bg-green-50 border border-green-200 rounded-lg">
-                                            <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                                            <span className="text-sm font-medium text-green-800">{equipement}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="text-center py-8 text-gray-500">
-                                    <Wrench className="w-12 h-12 mx-auto mb-3 text-gray-300"/>
-                                    <p>Aucun équipement renseigné</p>
-                                </div>
-                            )}
-                        </div>
 
                         {/* Statistiques */}
                         <div className="bg-white border border-gray-200 rounded-lg p-6">
@@ -266,18 +197,12 @@ export const ModalDetails = ({ activeTab, showDetailsModal, setShowDetailsModal,
                                 <Shield className="w-5 h-5 mr-2 text-purple-600"/>
                                 Informations sur la station
                             </h4>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="text-center p-4 bg-gray-50 rounded-lg">
                                     <div className="text-2xl font-bold text-blue-600">
-                                        {formatStatus(detailsItem.station_type)}
+                                        {formatStatus(detailsItem.stationType)}
                                     </div>
                                     <div className="text-sm text-gray-600">Type de station</div>
-                                </div>
-                                <div className="text-center p-4 bg-gray-50 rounded-lg">
-                                    <div className="text-2xl font-bold text-green-600">
-                                        {detailsItem.equipements ? detailsItem.equipements.length : 0}
-                                    </div>
-                                    <div className="text-sm text-gray-600">Équipements</div>
                                 </div>
                                 <div className="text-center p-4 bg-gray-50 rounded-lg">
                                     <div className="text-2xl font-bold text-orange-600">

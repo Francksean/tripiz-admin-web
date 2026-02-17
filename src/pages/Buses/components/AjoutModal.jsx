@@ -2,23 +2,22 @@ import React, {useEffect, useState} from 'react';
 import { Bus, Navigation, X, Save } from 'lucide-react';
 
 // Composant Modal d'ajout
-export const ModalAjout = ({activeTab, showAddModal, setShowAddModal, routesData, modalMode = 'add', editingItem = null, onSave}) => {
+export const ModalAjout = ({activeTab, showAddModal, setShowAddModal, modalMode = 'add', editingItem = null, onSave}) => {
     const [formData, setFormData] = useState({
+        // ID field for editing
+        id: null,
         // Bus fields
-        bus_number: '',
-        immatriculation: '',
+        busNumber: '',
+        matriculation: '',
         capacity: '',
-        status: 'DISPONIBLE',
-        modele: '',
-        route_id: '',
-        chauffeur: '',
+        busStatus: 'En service',
         // Station fields
-        station_name: '',
+        stationName: '',
         address: '',
-        station_type: 'ARRET_NORMAL',
-        gps_coordinates: '',
-        quartier: '',
-        equipements: []
+        stationType: 'DEPARTURE',
+        stationStatus: 'ACTIVE',
+        latitude: '',
+        longitude: ''
     });
 
     const [errors, setErrors] = useState({});
@@ -26,19 +25,17 @@ export const ModalAjout = ({activeTab, showAddModal, setShowAddModal, routesData
     // Fonction pour réinitialiser le formulaire
     const resetForm = () => {
         setFormData({
-            bus_number: '',
-            immatriculation: '',
+            id: null,
+            busNumber: '',
+            matriculation: '',
             capacity: '',
-            status: 'DISPONIBLE',
-            modele: '',
-            route_id: '',
-            chauffeur: '',
-            station_name: '',
+            busStatus: 'En service',
+            stationName: '',
             address: '',
-            station_type: 'ARRET_NORMAL',
-            gps_coordinates: '',
-            quartier: '',
-            equipements: []
+            stationType: 'DEPARTURE',
+            stationStatus: 'ACTIVE',
+            latitude: '',
+            longitude: ''
         });
         setErrors({});
     };
@@ -46,44 +43,49 @@ export const ModalAjout = ({activeTab, showAddModal, setShowAddModal, routesData
     // Effet pour gérer le mode édition/ajout
     useEffect(() => {
         if (modalMode === 'edit' && editingItem) {
+            console.log('EditingItem reçu:', editingItem); // Debug
+
             if (activeTab === 'bus') {
+                // Priorité à 'id' puis 'busId'
+                const busId = editingItem.id || editingItem.busId;
+                console.log('Bus ID trouvé:', busId); // Debug
+
                 setFormData({
-                    bus_number: editingItem.bus_number || '',
-                    immatriculation: editingItem.immatriculation || '',
+                    id: busId,
+                    busNumber: editingItem.bus_number || editingItem.busNumber || '',
+                    matriculation: editingItem.immatriculation || editingItem.matriculation || '',
                     capacity: editingItem.capacity ? String(editingItem.capacity) : '',
-                    status: editingItem.status || 'DISPONIBLE',
-                    modele: editingItem.modele || '',
-                    route_id: editingItem.route_id || '',
-                    chauffeur: editingItem.chauffeur || '',
-                    // Garder les champs station vides
-                    station_name: '',
+                    busStatus: editingItem.status || 'En service',
+                    // Reset station fields
+                    stationName: '',
                     address: '',
-                    station_type: 'ARRET_NORMAL',
-                    gps_coordinates: '',
-                    quartier: '',
-                    equipements: []
+                    stationType: 'DEPARTURE',
+                    latitude: '',
+                    longitude: '',
+                    stationStatus: 'ACTIVE',
                 });
             } else {
+                // Pour les stations
+                const stationId = editingItem.id || editingItem.stationId;
+                console.log('Station ID trouvé:', stationId); // Debug
+
                 setFormData({
-                    // Garder les champs bus vides
-                    bus_number: '',
-                    immatriculation: '',
+                    id: stationId,
+                    // Reset bus fields
+                    busNumber: '',
+                    matriculation: '',
                     capacity: '',
-                    status: 'DISPONIBLE',
-                    modele: '',
-                    route_id: '',
-                    chauffeur: '',
-                    // Pré-remplir les champs station
-                    station_name: editingItem.station_name || '',
+                    busStatus: 'En service',
+                    // Station fields - attention aux noms de propriétés
+                    stationName: editingItem.stationName || editingItem.station_name || editingItem.name || '',
                     address: editingItem.address || '',
-                    station_type: editingItem.station_type || 'ARRET_NORMAL',
-                    gps_coordinates: editingItem.gps_coordinates || '',
-                    quartier: editingItem.quartier || '',
-                    equipements: Array.isArray(editingItem.equipements) ? editingItem.equipements : []
+                    stationType: editingItem.stationType || editingItem.station_type || editingItem.type || 'DEPARTURE',
+                    latitude: editingItem.latitude ? String(editingItem.latitude) : '',
+                    longitude: editingItem.longitude ? String(editingItem.longitude) : '',
+                    stationStatus: editingItem.status || 'ACTIVE',
                 });
             }
         } else if (modalMode === 'add') {
-            // Mode ajout - réinitialiser le formulaire
             resetForm();
         }
     }, [modalMode, editingItem, activeTab, showAddModal]);
@@ -102,28 +104,35 @@ export const ModalAjout = ({activeTab, showAddModal, setShowAddModal, routesData
         }
     };
 
-    const handleEquipementChange = (equipement) => {
-        setFormData(prev => ({
-            ...prev,
-            equipements: prev.equipements.includes(equipement)
-                ? prev.equipements.filter(e => e !== equipement)
-                : [...prev.equipements, equipement]
-        }));
-    };
-
     const validateForm = () => {
         const newErrors = {};
 
         if (activeTab === 'bus') {
-            if (!formData.bus_number.trim()) newErrors.bus_number = 'Le numéro du bus est requis';
-            if (!formData.immatriculation.trim()) newErrors.immatriculation = 'L\'immatriculation est requise';
+            // Validate bus number as integer
+            if (!formData.busNumber || !String(formData.busNumber).trim() || isNaN(parseInt(formData.busNumber)) || parseInt(formData.busNumber) <= 0) {
+                newErrors.busNumber = 'Le numéro du bus doit être un entier positif';
+            }
+            if (!String(formData.matriculation || '').trim()) newErrors.matriculation = 'L\'immatriculation est requise';
             if (!formData.capacity || parseInt(formData.capacity) <= 0) newErrors.capacity = 'La capacité doit être supérieure à 0';
-            if (!formData.modele.trim()) newErrors.modele = 'Le modèle est requis';
         } else {
-            if (!formData.station_name.trim()) newErrors.station_name = 'Le nom de la station est requis';
-            if (!formData.address.trim()) newErrors.address = 'L\'adresse est requise';
-            if (!formData.gps_coordinates.trim()) newErrors.gps_coordinates = 'Les coordonnées GPS sont requises';
-            if (!formData.quartier.trim()) newErrors.quartier = 'Le quartier est requis';
+            if (!String(formData.stationName || '').trim()) newErrors.stationName = 'Le nom de la station est requis';
+            if (!String(formData.address || '').trim()) newErrors.address = 'L\'adresse est requise';
+
+            // Validation des coordonnées
+            const lat = parseFloat(formData.latitude);
+            const lng = parseFloat(formData.longitude);
+
+            if (!formData.latitude || isNaN(lat)) {
+                newErrors.latitude = 'La latitude est requise et doit être un nombre';
+            } else if (lat < -90 || lat > 90) {
+                newErrors.latitude = 'La latitude doit être entre -90 et 90';
+            }
+
+            if (!formData.longitude || isNaN(lng)) {
+                newErrors.longitude = 'La longitude est requise et doit être un nombre';
+            } else if (lng < -180 || lng > 180) {
+                newErrors.longitude = 'La longitude doit être entre -180 et 180';
+            }
         }
 
         setErrors(newErrors);
@@ -133,48 +142,61 @@ export const ModalAjout = ({activeTab, showAddModal, setShowAddModal, routesData
     const handleSubmit = (e) => {
         e.preventDefault();
         if (validateForm()) {
-            // Préparer les données selon le type
+            // Récupération sécurisée de l'ID
+            const itemId = formData.id;
+
+            console.log('=== DEBUG SUBMIT ===');
+            console.log('Item ID:', itemId);
+            console.log('Modal mode:', modalMode);
+            console.log('Form data:', formData);
+
+            // Vérification critique pour le mode édition
+            if (modalMode === 'edit' && !itemId) {
+                console.error('ERREUR: Pas d\'ID pour la modification!');
+                alert('Erreur: Impossible de modifier - ID manquant');
+                return;
+            }
+
+            // Préparer les données selon le type et le DTO
+            // IMPORTANT: Ne pas inclure l'ID dans le body, il est dans l'URL
             const dataToSave = activeTab === 'bus' ? {
-                bus_number: formData.bus_number,
-                immatriculation: formData.immatriculation,
+                // Respecter le DTO UpdateBusRequestDTO (sans ID)
+                busNumber: parseInt(formData.busNumber),
+                matriculation: formData.matriculation,
                 capacity: parseInt(formData.capacity),
-                status: formData.status,
-                modele: formData.modele,
-                route_id: formData.route_id || null,
-                chauffeur: formData.chauffeur || null,
-                // Inclure l'ID si c'est une édition
-                ...(modalMode === 'edit' && editingItem ? { id: editingItem.id } : {})
+                status: formData.busStatus
             } : {
-                station_name: formData.station_name,
+                // Respecter le DTO CreateStationRequestDTO (sans ID)
+                stationName: formData.stationName,
                 address: formData.address,
-                station_type: formData.station_type,
-                gps_coordinates: formData.gps_coordinates,
-                quartier: formData.quartier,
-                equipements: formData.equipements,
-                status: formData.status || 'ACTIVE',
-                // Inclure l'ID si c'est une édition
-                ...(modalMode === 'edit' && editingItem ? { id: editingItem.id } : {})
+                stationType: formData.stationType,
+                status: formData.stationStatus,
+                latitude: parseFloat(formData.latitude),
+                longitude: parseFloat(formData.longitude)
             };
 
-            // Appeler la fonction de sauvegarde si elle est fournie
+            console.log('Données à sauvegarder (sans ID):', dataToSave);
+
+            // Pour le mode édition, passer l'ID séparément
+            if (modalMode === 'edit') {
+                // Ajouter l'ID comme propriété séparée pour la fonction onSave
+                dataToSave.id = itemId;
+            }
+
+            // Appeler la fonction de sauvegarde
             if (onSave) {
                 onSave(dataToSave, modalMode);
-            } else {
-                // Fallback - afficher dans la console
-                console.log('Données à sauvegarder:', dataToSave);
-                alert(`${activeTab === 'bus' ? 'Bus' : 'Station'} ${modalMode === 'edit' ? 'modifié(e)' : 'ajouté(e)'} avec succès !`);
             }
 
             handleClose();
         }
     };
 
+
     const handleClose = () => {
         setShowAddModal(false);
         resetForm();
     };
-
-    const equipementsDisponibles = ['Abri', 'Bancs', 'Éclairage', 'Panneau info', 'WC', 'Distributeur', 'Wi-Fi', 'Caméra'];
 
     if (!showAddModal) return null;
 
@@ -207,15 +229,17 @@ export const ModalAjout = ({activeTab, showAddModal, setShowAddModal, routesData
                                             Numéro du bus *
                                         </label>
                                         <input
-                                            type="text"
-                                            placeholder="ex: BUS001"
-                                            value={formData.bus_number}
-                                            onChange={(e) => handleInputChange('bus_number', e.target.value)}
+                                            type="number"
+                                            min="1"
+                                            step="1"
+                                            placeholder="ex: 1"
+                                            value={formData.busNumber}
+                                            onChange={(e) => handleInputChange('busNumber', e.target.value)}
                                             className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                                                errors.bus_number ? 'border-red-300' : 'border-gray-200'
+                                                errors.busNumber ? 'border-red-300' : 'border-gray-200'
                                             }`}
                                         />
-                                        {errors.bus_number && <p className="text-red-500 text-xs mt-1">{errors.bus_number}</p>}
+                                        {errors.busNumber && <p className="text-red-500 text-xs mt-1">{errors.busNumber}</p>}
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -224,94 +248,46 @@ export const ModalAjout = ({activeTab, showAddModal, setShowAddModal, routesData
                                         <input
                                             type="text"
                                             placeholder="ex: DLA-2001-CM"
-                                            value={formData.immatriculation}
-                                            onChange={(e) => handleInputChange('immatriculation', e.target.value)}
+                                            value={formData.matriculation}
+                                            onChange={(e) => handleInputChange('matriculation', e.target.value)}
                                             className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                                                errors.immatriculation ? 'border-red-300' : 'border-gray-200'
+                                                errors.matriculation ? 'border-red-300' : 'border-gray-200'
                                             }`}
                                         />
-                                        {errors.immatriculation && <p className="text-red-500 text-xs mt-1">{errors.immatriculation}</p>}
+                                        {errors.matriculation && <p className="text-red-500 text-xs mt-1">{errors.matriculation}</p>}
                                     </div>
                                 </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Modèle du bus *
-                                        </label>
-                                        <input
-                                            type="text"
-                                            placeholder="ex: Mercedes Citaro"
-                                            value={formData.modele}
-                                            onChange={(e) => handleInputChange('modele', e.target.value)}
-                                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                                                errors.modele ? 'border-red-300' : 'border-gray-200'
-                                            }`}
-                                        />
-                                        {errors.modele && <p className="text-red-500 text-xs mt-1">{errors.modele}</p>}
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Capacité (places) *
-                                        </label>
-                                        <input
-                                            type="number"
-                                            min="1"
-                                            placeholder="ex: 50"
-                                            value={formData.capacity}
-                                            onChange={(e) => handleInputChange('capacity', e.target.value)}
-                                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                                                errors.capacity ? 'border-red-300' : 'border-gray-200'
-                                            }`}
-                                        />
-                                        {errors.capacity && <p className="text-red-500 text-xs mt-1">{errors.capacity}</p>}
-                                    </div>
+                                <div className="mt-4">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Capacité (places) *
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        placeholder="ex: 50"
+                                        value={formData.capacity}
+                                        onChange={(e) => handleInputChange('capacity', e.target.value)}
+                                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                                            errors.capacity ? 'border-red-300' : 'border-gray-200'
+                                        }`}
+                                    />
+                                    {errors.capacity && <p className="text-red-500 text-xs mt-1">{errors.capacity}</p>}
                                 </div>
                             </div>
 
                             {/* Affectation et statut */}
                             <div className="bg-gray-50 p-4 rounded-lg">
                                 <h3 className="font-semibold text-gray-700 mb-4">Affectation et statut</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">Statut *</label>
-                                        <select
-                                            value={formData.status}
-                                            onChange={(e) => handleInputChange('status', e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        >
-                                            <option value="DISPONIBLE">Disponible</option>
-                                            <option value="EN_SERVICE">En Service</option>
-                                            <option value="MAINTENANCE">Maintenance</option>
-                                            <option value="HORS_SERVICE">Hors Service</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">Ligne assignée</label>
-                                        <select
-                                            value={formData.route_id}
-                                            onChange={(e) => handleInputChange('route_id', e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        >
-                                            <option value="">Sélectionner une ligne</option>
-                                            {routesData && routesData.map((route) => (
-                                                <option key={route.route_id} value={route.route_id}>
-                                                    {route.route_name} - {route.description}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div className="mt-4">
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Chauffeur assigné</label>
-                                    <input
-                                        type="text"
-                                        placeholder="ex: Pierre Mbarga"
-                                        value={formData.chauffeur}
-                                        onChange={(e) => handleInputChange('chauffeur', e.target.value)}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Statut *</label>
+                                    <select
+                                        value={formData.busStatus}
+                                        onChange={(e) => handleInputChange('busStatus', e.target.value)}
                                         className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    />
+                                    >
+                                        <option value="En service">En Service</option>
+                                        <option value="En maintenance">En maintenance</option>
+                                    </select>
                                 </div>
                             </div>
                         </>
@@ -327,13 +303,13 @@ export const ModalAjout = ({activeTab, showAddModal, setShowAddModal, routesData
                                     <input
                                         type="text"
                                         placeholder="ex: Gare Centrale"
-                                        value={formData.station_name}
-                                        onChange={(e) => handleInputChange('station_name', e.target.value)}
+                                        value={formData.stationName}
+                                        onChange={(e) => handleInputChange('stationName', e.target.value)}
                                         className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                                            errors.station_name ? 'border-red-300' : 'border-gray-200'
+                                            errors.stationName ? 'border-red-300' : 'border-gray-200'
                                         }`}
                                     />
-                                    {errors.station_name && <p className="text-red-500 text-xs mt-1">{errors.station_name}</p>}
+                                    {errors.stationName && <p className="text-red-500 text-xs mt-1">{errors.stationName}</p>}
                                 </div>
 
                                 <div className="mt-4">
@@ -355,33 +331,35 @@ export const ModalAjout = ({activeTab, showAddModal, setShowAddModal, routesData
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Quartier *
+                                            Latitude *
                                         </label>
                                         <input
-                                            type="text"
-                                            placeholder="ex: Akwa"
-                                            value={formData.quartier}
-                                            onChange={(e) => handleInputChange('quartier', e.target.value)}
+                                            type="number"
+                                            step="any"
+                                            placeholder="ex: 3.8480"
+                                            value={formData.latitude}
+                                            onChange={(e) => handleInputChange('latitude', e.target.value)}
                                             className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                                                errors.quartier ? 'border-red-300' : 'border-gray-200'
+                                                errors.latitude ? 'border-red-300' : 'border-gray-200'
                                             }`}
                                         />
-                                        {errors.quartier && <p className="text-red-500 text-xs mt-1">{errors.quartier}</p>}
+                                        {errors.latitude && <p className="text-red-500 text-xs mt-1">{errors.latitude}</p>}
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Coordonnées GPS *
+                                            Longitude *
                                         </label>
                                         <input
-                                            type="text"
-                                            placeholder="ex: 4.0511°N, 9.7679°E"
-                                            value={formData.gps_coordinates}
-                                            onChange={(e) => handleInputChange('gps_coordinates', e.target.value)}
+                                            type="number"
+                                            step="any"
+                                            placeholder="ex: 11.5021"
+                                            value={formData.longitude}
+                                            onChange={(e) => handleInputChange('longitude', e.target.value)}
                                             className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                                                errors.gps_coordinates ? 'border-red-300' : 'border-gray-200'
+                                                errors.longitude ? 'border-red-300' : 'border-gray-200'
                                             }`}
                                         />
-                                        {errors.gps_coordinates && <p className="text-red-500 text-xs mt-1">{errors.gps_coordinates}</p>}
+                                        {errors.longitude && <p className="text-red-500 text-xs mt-1">{errors.longitude}</p>}
                                     </div>
                                 </div>
                             </div>
@@ -393,20 +371,20 @@ export const ModalAjout = ({activeTab, showAddModal, setShowAddModal, routesData
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">Type de station *</label>
                                         <select
-                                            value={formData.station_type}
-                                            onChange={(e) => handleInputChange('station_type', e.target.value)}
+                                            value={formData.stationType}
+                                            onChange={(e) => handleInputChange('stationType', e.target.value)}
                                             className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         >
-                                            <option value="ARRET_NORMAL">Arrêt Normal</option>
+                                            <option value="STOP">Arrêt Normal</option>
                                             <option value="TERMINUS">Terminus</option>
-                                            <option value="CORRESPONDANCE">Correspondance</option>
+                                            <option value="DEPARTURE">Depart</option>
                                         </select>
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">Statut *</label>
                                         <select
-                                            value={formData.status}
-                                            onChange={(e) => handleInputChange('status', e.target.value)}
+                                            value={formData.stationStatus}
+                                            onChange={(e) => handleInputChange('stationStatus', e.target.value)}
                                             className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         >
                                             <option value="ACTIVE">Actif</option>
@@ -414,24 +392,6 @@ export const ModalAjout = ({activeTab, showAddModal, setShowAddModal, routesData
                                             <option value="INACTIVE">Inactif</option>
                                         </select>
                                     </div>
-                                </div>
-                            </div>
-
-                            {/* Équipements */}
-                            <div className="bg-gray-50 p-4 rounded-lg">
-                                <h3 className="font-semibold text-gray-700 mb-4">Équipements disponibles</h3>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                    {equipementsDisponibles.map((equipement) => (
-                                        <label key={equipement} className="flex items-center space-x-2 cursor-pointer">
-                                            <input
-                                                type="checkbox"
-                                                checked={formData.equipements.includes(equipement)}
-                                                onChange={() => handleEquipementChange(equipement)}
-                                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                            />
-                                            <span className="text-sm text-gray-700">{equipement}</span>
-                                        </label>
-                                    ))}
                                 </div>
                             </div>
                         </>

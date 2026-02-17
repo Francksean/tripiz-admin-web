@@ -1,39 +1,43 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, Route, MapPin, Clock, CreditCard, FileText } from 'lucide-react';
+import { X, Save, Route, MapPin, Clock, FileText, AlertCircle } from 'lucide-react';
 
-const ItineraireEditModal = ({ itineraire, isOpen, onClose, onSave }) => {
+const ItineraireEditModal = ({ itineraire, isOpen, onClose, onSave, stations = [] }) => {
     const [formData, setFormData] = useState({
-        itenary_name: '',
-        route_id: '',
+        itinerary_name: '',
+        route_name: '',
         direction: '',
         departure_station: '',
         arrival_station: '',
         distance: '',
         estimated_duration: '',
-        ticket_price: '',
-        status: '',
-        description: ''
+        status: 'ACTIVE',
     });
 
     const [isLoading, setIsLoading] = useState(false);
+    const [errors, setErrors] = useState([]);
 
     // Initialiser les données du formulaire quand l'itinéraire change
     useEffect(() => {
         if (itineraire) {
             setFormData({
-                itenary_name: itineraire.itenary_name || '',
-                route_id: itineraire.route_id || '',
+                itinerary_name: itineraire.itinerary_name || itineraire.itenary_name || '',
+                route_name: itineraire.route_name || '',
                 direction: itineraire.direction || '',
                 departure_station: itineraire.departure_station || '',
                 arrival_station: itineraire.arrival_station || '',
                 distance: itineraire.distance || '',
                 estimated_duration: itineraire.estimated_duration || '',
-                ticket_price: itineraire.ticket_price || '',
-                status: itineraire.status || '',
-                description: itineraire.description || ''
+                status: itineraire.status || 'ACTIVE',
             });
         }
     }, [itineraire]);
+
+    // Réinitialiser les erreurs quand le modal s'ouvre
+    useEffect(() => {
+        if (isOpen) {
+            setErrors([]);
+        }
+    }, [isOpen]);
 
     if (!isOpen || !itineraire) return null;
 
@@ -43,40 +47,94 @@ const ItineraireEditModal = ({ itineraire, isOpen, onClose, onSave }) => {
             ...prev,
             [name]: value
         }));
+
+        // Effacer les erreurs quand l'utilisateur modifie les champs
+        if (errors.length > 0) {
+            setErrors([]);
+        }
+    };
+
+    const validateForm = () => {
+        const newErrors = [];
+
+        if (!formData.itinerary_name.trim()) {
+            newErrors.push('Le nom de l\'itinéraire est requis');
+        }
+
+        if (!formData.route_name.trim()) {
+            newErrors.push('Le nom de la ligne est requis');
+        }
+
+        if (!formData.direction) {
+            newErrors.push('La direction est requise');
+        }
+
+        if (!formData.departure_station) {
+            newErrors.push('La station de départ est requise');
+        }
+
+        if (!formData.arrival_station) {
+            newErrors.push('La station d\'arrivée est requise');
+        }
+
+        if (formData.departure_station === formData.arrival_station) {
+            newErrors.push('La station de départ et d\'arrivée doivent être différentes');
+        }
+
+        if (!formData.distance || parseFloat(formData.distance) <= 0) {
+            newErrors.push('La distance doit être un nombre positif');
+        }
+
+        if (!formData.estimated_duration || parseInt(formData.estimated_duration) <= 0) {
+            newErrors.push('La durée estimée doit être un nombre positif');
+        }
+
+        return newErrors;
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Validation
+        const validationErrors = validateForm();
+        if (validationErrors.length > 0) {
+            setErrors(validationErrors);
+            return;
+        }
+
         setIsLoading(true);
+        setErrors([]);
 
         try {
-            // Ici vous pouvez ajouter la logique de sauvegarde
-            await onSave({ ...itineraire, ...formData });
+            // Préparer les données pour la sauvegarde
+            const updatedItineraire = {
+                ...itineraire,
+                itinerary_name: formData.itinerary_name,
+                route_name: formData.route_name,
+                direction: formData.direction,
+                departure_station: formData.departure_station,
+                arrival_station: formData.arrival_station,
+                distance: parseFloat(formData.distance),
+                estimated_duration: parseInt(formData.estimated_duration),
+                status: formData.status,
+            };
+
+            await onSave(updatedItineraire);
             onClose();
         } catch (error) {
             console.error('Erreur lors de la sauvegarde:', error);
+            setErrors([error.message || 'Erreur lors de la sauvegarde']);
         } finally {
             setIsLoading(false);
         }
     };
 
-    const routes = [
-        { id: 1, name: 'Ligne A' },
-        { id: 2, name: 'Ligne B' },
-        { id: 3, name: 'Ligne C' },
-        { id: 4, name: 'Ligne D' }
-    ];
-
-    const stations = [
-        'Gare Centrale',
-        'Rond-point Akwa',
-        'Marché Bassa',
-        'Place du Gouvernement',
-        'Marché Bonabéri',
-        'Carrefour Makepe',
-        'Station Ndokoti',
-        'Marché Kotto'
-    ];
+    // Fonction pour obtenir le nom d'une station par son ID
+    const getStationNameById = (stationId) => {
+        if (!stationId) return 'Station non définie';
+        const station = stations.find(s => s.stationId === stationId);
+        return station ? station.stationName : stationId;
+    };
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -90,12 +148,15 @@ const ItineraireEditModal = ({ itineraire, isOpen, onClose, onSave }) => {
                             </div>
                             <div>
                                 <h2 className="text-xl font-bold text-gray-800">Modifier l'itinéraire</h2>
-                                <p className="text-sm text-gray-600">{itineraire.route_name} • ID: {itineraire.itinary_id}</p>
+                                <p className="text-sm text-gray-600">
+                                    {itineraire.route_name} • ID: {itineraire.itinerary_id || itineraire.itinary_id}
+                                </p>
                             </div>
                         </div>
                         <button
                             onClick={onClose}
                             className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
+                            disabled={isLoading}
                         >
                             <X size={20} />
                         </button>
@@ -103,6 +164,21 @@ const ItineraireEditModal = ({ itineraire, isOpen, onClose, onSave }) => {
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                    {/* Affichage des erreurs */}
+                    {errors.length > 0 && (
+                        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                            <div className="flex items-center gap-2 mb-2">
+                                <AlertCircle className="w-4 h-4 text-red-500" />
+                                <span className="text-red-800 font-medium">Erreurs de validation :</span>
+                            </div>
+                            <ul className="list-disc list-inside text-red-700 text-sm space-y-1">
+                                {errors.map((error, index) => (
+                                    <li key={index}>{error}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+
                     {/* Informations générales */}
                     <div className="space-y-4">
                         <div className="flex items-center gap-2 mb-4">
@@ -117,31 +193,33 @@ const ItineraireEditModal = ({ itineraire, isOpen, onClose, onSave }) => {
                                 </label>
                                 <input
                                     type="text"
-                                    name="itenary_name"
-                                    value={formData.itenary_name}
+                                    name="itinerary_name"
+                                    value={formData.itinerary_name}
                                     onChange={handleInputChange}
                                     placeholder="ex: Centre-ville → Aéroport"
                                     className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                                     required
+                                    disabled={isLoading}
                                 />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Ligne associée *
+                                    Nom de la ligne *
                                 </label>
-                                <select
-                                    name="route_id"
-                                    value={formData.route_id}
+                                <input
+                                    type="text"
+                                    name="route_name"
+                                    value={formData.route_name}
                                     onChange={handleInputChange}
+                                    placeholder="ex: Ligne A"
                                     className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                                     required
-                                >
-                                    <option value="">Sélectionner une ligne</option>
-                                    {routes.map(route => (
-                                        <option key={route.id} value={route.id}>{route.name}</option>
-                                    ))}
-                                </select>
+                                    disabled={isLoading}
+                                />
                             </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
                                     Direction *
@@ -152,6 +230,7 @@ const ItineraireEditModal = ({ itineraire, isOpen, onClose, onSave }) => {
                                     onChange={handleInputChange}
                                     className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                                     required
+                                    disabled={isLoading}
                                 >
                                     <option value="">Sélectionner une direction</option>
                                     <option value="ALLER">ALLER</option>
@@ -168,8 +247,8 @@ const ItineraireEditModal = ({ itineraire, isOpen, onClose, onSave }) => {
                                     onChange={handleInputChange}
                                     className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                                     required
+                                    disabled={isLoading}
                                 >
-                                    <option value="">Sélectionner un statut</option>
                                     <option value="ACTIVE">ACTIVE</option>
                                     <option value="MAINTENANCE">MAINTENANCE</option>
                                     <option value="INACTIVE">INACTIVE</option>
@@ -196,12 +275,20 @@ const ItineraireEditModal = ({ itineraire, isOpen, onClose, onSave }) => {
                                     onChange={handleInputChange}
                                     className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                                     required
+                                    disabled={isLoading}
                                 >
                                     <option value="">Sélectionner la station de départ</option>
                                     {stations.map(station => (
-                                        <option key={station} value={station}>{station}</option>
+                                        <option key={station.stationId} value={station.stationId}>
+                                            {station.stationName}
+                                        </option>
                                     ))}
                                 </select>
+                                {formData.departure_station && (
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Actuellement: {getStationNameById(formData.departure_station)}
+                                    </p>
+                                )}
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -213,12 +300,20 @@ const ItineraireEditModal = ({ itineraire, isOpen, onClose, onSave }) => {
                                     onChange={handleInputChange}
                                     className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                                     required
+                                    disabled={isLoading}
                                 >
                                     <option value="">Sélectionner la station d'arrivée</option>
                                     {stations.map(station => (
-                                        <option key={station} value={station}>{station}</option>
+                                        <option key={station.stationId} value={station.stationId}>
+                                            {station.stationName}
+                                        </option>
                                     ))}
                                 </select>
+                                {formData.arrival_station && (
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Actuellement: {getStationNameById(formData.arrival_station)}
+                                    </p>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -230,7 +325,7 @@ const ItineraireEditModal = ({ itineraire, isOpen, onClose, onSave }) => {
                             <h3 className="text-lg font-semibold text-gray-800">Détails du parcours</h3>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
                                     Distance (km) *
@@ -241,9 +336,11 @@ const ItineraireEditModal = ({ itineraire, isOpen, onClose, onSave }) => {
                                     value={formData.distance}
                                     onChange={handleInputChange}
                                     step="0.1"
+                                    min="0"
                                     placeholder="12.5"
                                     className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                                     required
+                                    disabled={isLoading}
                                 />
                             </div>
                             <div>
@@ -255,39 +352,13 @@ const ItineraireEditModal = ({ itineraire, isOpen, onClose, onSave }) => {
                                     name="estimated_duration"
                                     value={formData.estimated_duration}
                                     onChange={handleInputChange}
+                                    min="1"
                                     placeholder="45"
                                     className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                                     required
+                                    disabled={isLoading}
                                 />
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Prix du ticket (FCFA) *
-                                </label>
-                                <input
-                                    type="number"
-                                    name="ticket_price"
-                                    value={formData.ticket_price}
-                                    onChange={handleInputChange}
-                                    placeholder="500"
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                                    required
-                                />
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Description
-                            </label>
-                            <textarea
-                                name="description"
-                                value={formData.description}
-                                onChange={handleInputChange}
-                                rows="3"
-                                placeholder="Description de l'itinéraire..."
-                                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                            ></textarea>
                         </div>
                     </div>
 

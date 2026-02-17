@@ -12,7 +12,7 @@ import {
     CreditCard,
     Bell,
     User,
-    MapPin
+    Map
 } from 'lucide-react';
 
 // Sidebar Component
@@ -28,14 +28,15 @@ export const TripizSidebar = ({ isCollapsed, onToggleCollapse, isMobile, onMobil
     const currentPath = location.pathname.slice(1) || 'dashboard';
 
     const menuItems = [
-        { id: 'dashboard', icon: Home, label: 'Tableau de bord', labelEn: 'Dashboard' },
+        // { id: 'dashboard', icon: Home, label: 'Tableau de bord', labelEn: 'Dashboard' },
         { id: 'users', icon: Users, label: 'Utilisateurs', labelEn: 'Users' },
         { id: 'routes', icon: Route, label: 'Itinéraires', labelEn: 'Routes' },
+        // { id: 'trips', icon: Map, label: 'Trajets', labelEn: 'Trips' },
         { id: 'buses', icon: Bus, label: 'Bus', labelEn: 'Routes' },
-        { id: 'tickets', icon: CreditCard, label: 'Billets', labelEn: 'Tickets' },
-        { id: 'stats', icon: BarChart3, label: 'Statistiques', labelEn: 'Statistics' },
-        { id: 'notifications', icon: Bell, label: 'Notifications', labelEn: 'Notifications' },
-        { id: 'settings', icon: Settings, label: 'Paramètres', labelEn: 'Settings' }
+        // { id: 'tickets', icon: CreditCard, label: 'Billets', labelEn: 'Tickets' },
+        // { id: 'stats', icon: BarChart3, label: 'Statistiques', labelEn: 'Statistics' },
+        // { id: 'notifications', icon: Bell, label: 'Notifications', labelEn: 'Notifications' },
+        // { id: 'settings', icon: Settings, label: 'Paramètres', labelEn: 'Settings' }
     ];
 
 

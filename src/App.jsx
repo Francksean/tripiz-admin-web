@@ -9,6 +9,7 @@ import TripizNotification from "./pages/Notifications/NotificationsPage.jsx";
 import TripizStatistics from "./pages/Statistics/StatisticsPage.jsx";
 import TripizParameter from "./pages/Parameters/ParameterPage.jsx";
 import TripizBus from "./pages/Buses/BusPage.jsx";
+import TripizTrips from "./pages/Trips/TripsPage.jsx";
 
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
             <Route path="/dashboard" element={<TripizDashboard />} />
             <Route path="/users" element={<TripizUserManagement />} />
             <Route path="/routes" element={<TripizItineraries />} />
+            <Route path="/trips" element={<TripizTrips />} />
             <Route path="/buses" element={<TripizBus />} />
             <Route path="/tickets" element={<TripizTickets />} />
             <Route path="/stats" element={<TripizStatistics />} />

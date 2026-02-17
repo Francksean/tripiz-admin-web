@@ -1,20 +1,46 @@
-// User Modal Component
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import { X } from "lucide-react";
 
-export const UserModal = ({ isOpen, onClose, user, onSave, mode }) => {
+export const UserModal = ({ isOpen, onClose, user, onSave }) => {
     const [formData, setFormData] = useState(user || {
-        name: '',
         email: '',
-        phone: '',
-        role: 'user',
-        status: 'active'
+        password: '',
     });
 
-    const handleSubmit = (e) => {
+    useEffect(() => {
+        if (user) {
+            setFormData(user);
+        } else {
+            // Réinitialiser le formulaire si aucun utilisateur n'est sélectionné
+            setFormData({
+                email: '',
+                password: '',
+            });
+        }
+    }, [user]);
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        onSave(formData);
+        try {
+            await onSave(formData);
+            onClose();
+            // Réinitialiser le formulaire après sauvegarde
+            setFormData({
+                email: '',
+                password: '',
+            });
+        } catch (error) {
+            console.error('Erreur lors de la sauvegarde:', error);
+        }
+    };
+
+    const handleClose = () => {
         onClose();
+        // Réinitialiser le formulaire à la fermeture
+        setFormData({
+            email: '',
+            password: '',
+        });
     };
 
     if (!isOpen) return null;
@@ -24,10 +50,10 @@ export const UserModal = ({ isOpen, onClose, user, onSave, mode }) => {
             <div className="bg-white rounded-xl xl:rounded-2xl p-4 xl:p-8 w-full max-w-md shadow-2xl transform transition-all duration-300 max-h-[90vh] overflow-y-auto">
                 <div className="flex items-center justify-between mb-4 xl:mb-6">
                     <h2 className="text-lg xl:text-2xl font-bold text-gray-800">
-                        {mode === 'create' ? 'Nouvel Utilisateur' : 'Modifier Utilisateur'}
+                        Nouveau Chauffeur
                     </h2>
                     <button
-                        onClick={onClose}
+                        onClick={handleClose}
                         className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
                     >
                         <X className="w-4 h-4 xl:w-5 xl:h-5" />
@@ -35,19 +61,6 @@ export const UserModal = ({ isOpen, onClose, user, onSave, mode }) => {
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-3 xl:space-y-4">
-                    <div>
-                        <label className="block text-xs xl:text-sm font-medium mb-2 text-gray-700">
-                            Nom complet
-                        </label>
-                        <input
-                            type="text"
-                            value={formData.name}
-                            onChange={(e) => setFormData({...formData, name: e.target.value})}
-                            className="w-full p-2.5 xl:p-3 rounded-lg xl:rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-sm xl:text-base"
-                            required
-                        />
-                    </div>
-
                     <div>
                         <label className="block text-xs xl:text-sm font-medium mb-2 text-gray-700">
                             Email
@@ -63,50 +76,23 @@ export const UserModal = ({ isOpen, onClose, user, onSave, mode }) => {
 
                     <div>
                         <label className="block text-xs xl:text-sm font-medium mb-2 text-gray-700">
-                            Téléphone
+                            Mot de passe
                         </label>
                         <input
-                            type="tel"
-                            value={formData.phone}
-                            onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                            type="password"
+                            value={formData.password}
+                            onChange={(e) => setFormData({...formData, password: e.target.value})}
                             className="w-full p-2.5 xl:p-3 rounded-lg xl:rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-sm xl:text-base"
                             required
+                            minLength={8}
+                            placeholder="Minimum 8 caractères ex: password1234"
                         />
-                    </div>
-
-                    <div>
-                        <label className="block text-xs xl:text-sm font-medium mb-2 text-gray-700">
-                            Rôle
-                        </label>
-                        <select
-                            value={formData.role}
-                            onChange={(e) => setFormData({...formData, role: e.target.value})}
-                            className="w-full p-2.5 xl:p-3 rounded-lg xl:rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-sm xl:text-base"
-                        >
-                            <option value="user">Client</option>
-                            <option value="admin">Administrateur</option>
-                            <option value="driver">Chauffeur</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label className="block text-xs xl:text-sm font-medium mb-2 text-gray-700">
-                            Statut
-                        </label>
-                        <select
-                            value={formData.status}
-                            onChange={(e) => setFormData({...formData, status: e.target.value})}
-                            className="w-full p-2.5 xl:p-3 rounded-lg xl:rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-sm xl:text-base"
-                        >
-                            <option value="active">Actif</option>
-                            <option value="blocked">Bloqué</option>
-                        </select>
                     </div>
 
                     <div className="flex space-x-3 xl:space-x-4 pt-4">
                         <button
                             type="button"
-                            onClick={onClose}
+                            onClick={handleClose}
                             className="flex-1 py-2.5 xl:py-3 px-4 rounded-lg xl:rounded-xl border border-gray-300 text-gray-700 hover:bg-gray-50 transition-all text-sm xl:text-base"
                         >
                             Annuler
@@ -115,7 +101,7 @@ export const UserModal = ({ isOpen, onClose, user, onSave, mode }) => {
                             type="submit"
                             className="flex-1 py-2.5 xl:py-3 px-4 rounded-lg xl:rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium hover:scale-105 transition-all shadow-lg hover:shadow-xl text-sm xl:text-base"
                         >
-                            {mode === 'create' ? 'Créer' : 'Modifier'}
+                            Créer
                         </button>
                     </div>
                 </form>
