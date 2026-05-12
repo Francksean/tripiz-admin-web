@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Plus, Edit, Trash2, MapPin, Clock, Users, Filter, Eye, Settings, ArrowRight, AlertCircle, RefreshCw } from 'lucide-react';
-import {itineraryService} from "../../../Services/ItineraireService.js";
+import { itineraryService } from "../../../Services/ItineraireService.js";
 import ItineraireEditModal from "./EditModal.jsx";
 import ItineraireDetailsModal from "./DetailsModal.jsx";
-import {stationService} from "../../../Services/StationService.js";
+import { stationService } from "../../../Services/StationService.js";
 
 
 const ItinerairesPage = () => {
@@ -17,7 +17,7 @@ const ItinerairesPage = () => {
     const [stations, setStations] = useState([]);
     const [loadingStations, setLoadingStations] = useState(false);
 
-// useEffect modifié
+    // useEffect modifié
     useEffect(() => {
         loadData();
         testApiConnection();
@@ -239,19 +239,6 @@ const ItinerairesPage = () => {
         { label: 'Distance Totale', value: `${stats.totalDistance} km`, color: 'bg-purple-100 text-purple-600', icon: '📏' }
     ];
 
-    if (loading) {
-        return (
-            <div className="p-3 lg:p-4 bg-gray-50 min-h-screen">
-                <div className="flex items-center justify-center h-96">
-                    <div className="text-center">
-                        <RefreshCw className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
-                        <p className="text-gray-600">Chargement des itinéraires...</p>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
     return (
         <div className="p-3 lg:p-4 bg-gray-50 min-h-screen">
             <div className="p-2 lg:p-4">
@@ -262,43 +249,32 @@ const ItinerairesPage = () => {
                             <h1 className="text-xl lg:text-2xl font-bold text-gray-800">Gestion des Itinéraires</h1>
                             <p className="text-gray-600 mt-1 text-sm">
                                 Gérez les itinéraires, lignes et parcours de bus
-                                {!apiConnected && (
-                                    <span className="ml-2 text-orange-600 text-xs">
-                                        (Mode déconnecté)
-                                    </span>
-                                )}
+                                {/*{!apiConnected && (*/}
+                                {/*    <span className="ml-2 text-orange-600 text-xs">*/}
+                                {/*        (Mode déconnecté)*/}
+                                {/*    </span>*/}
+                                {/*)}*/}
                             </p>
                         </div>
                         <div className="flex items-center gap-3">
-                            <button
-                                onClick={loadData}
-                                className="flex items-center px-3 py-2 text-sm bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-all"
-                                disabled={loading}
-                            >
-                                <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                                Actualiser
-                            </button>
+                            {/*<button*/}
+                            {/*    onClick={loadData}*/}
+                            {/*    className="flex items-center px-3 py-2 text-sm bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-all"*/}
+                            {/*    disabled={loading}*/}
+                            {/*>*/}
+                            {/*    <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />*/}
+                            {/*    Actualiser*/}
+                            {/*</button>*/}
                             <button
                                 onClick={() => setShowAddModal(true)}
                                 className="flex items-center px-4 sm:px-5 py-3 text-sm bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-xl hover:scale-105 transition-all shadow-lg hover:shadow-xl w-fit"
                             >
-                                <Plus className="w-4 h-4 mr-2"/>
+                                <Plus className="w-4 h-4 mr-2" />
                                 Nouvel Itinéraire
                             </button>
                         </div>
                     </div>
                 </div>
-
-                {/* Message d'erreur */}
-                {error && (
-                    <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
-                        <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-                        <div>
-                            <p className="text-red-800 font-medium">Erreur de chargement</p>
-                            <p className="text-red-600 text-sm">{error}</p>
-                        </div>
-                    </div>
-                )}
 
                 {/* Statistiques */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3 mb-4">
@@ -323,7 +299,7 @@ const ItinerairesPage = () => {
                     <div className="flex flex-col lg:flex-row gap-3">
                         <div className="flex-1 relative">
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                                    size={18}/>
+                                size={18} />
                             <input
                                 type="text"
                                 placeholder="Rechercher un itinéraire ou une ligne..."
@@ -333,7 +309,7 @@ const ItinerairesPage = () => {
                             />
                         </div>
                         <div className="flex items-center gap-2">
-                            <Filter size={18} className="text-gray-400"/>
+                            <Filter size={18} className="text-gray-400" />
                             <select
                                 value={directionFilter}
                                 onChange={(e) => setDirectionFilter(e.target.value)}
@@ -352,87 +328,121 @@ const ItinerairesPage = () => {
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead className="bg-gray-50 border-b border-gray-200">
-                            <tr>
-                                <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Itinéraire</th>
-                                <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Parcours</th>
-                                <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Détails</th>
-                                <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Actions</th>
-                            </tr>
+                                <tr>
+                                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Itinéraire</th>
+                                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Parcours</th>
+                                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Détails</th>
+                                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Actions</th>
+                                </tr>
                             </thead>
                             <tbody>
-                            {filteredItineraires.map((itineraire) => (
-                                <tr key={itineraire.itinerary_id}
-                                    className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                                    <td className="py-3 px-4">
-                                        <div>
-                                            <div className="font-semibold text-gray-800 text-sm">
-                                                {itineraire.itinerary_name || itineraire.itenary_name || 'Sans nom'}
-                                            </div>
-                                            <div className="text-xs text-gray-500 mt-1">
-                                                {itineraire.route_name || 'Route non définie'}
-                                            </div>
-                                            <div className="mt-1">
-                                                <span className={getDirectionBadge(itineraire.direction)}>
-                                                    {itineraire.direction || 'N/A'}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="py-3 px-4">
-                                        <div className="space-y-2">
-                                            <div className="flex items-center gap-2 text-xs">
-                                                <MapPin size={12} className="text-green-500"/>
-                                                <span className="text-gray-700 font-medium">
-                                                    {getStationNameById(itineraire.departure_station)}
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center justify-center">
-                                                <ArrowRight size={14} className="text-gray-400"/>
-                                            </div>
-                                            <div className="flex items-center gap-2 text-xs">
-                                                <MapPin size={12} className="text-red-500"/>
-                                                <span className="text-gray-700 font-medium">
-                                                    {getStationNameById(itineraire.arrival_station)}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="py-3 px-4">
-                                        <div className="space-y-1 text-xs">
-                                            <div className="text-gray-700">
-                                                <span
-                                                    className="font-medium">Distance:</span> {itineraire.distance || 0} km
-                                            </div>
-                                            <div className="text-gray-700">
-                                                <span
-                                                    className="font-medium">Durée:</span> {itineraire.estimated_duration || 0} min
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="py-3 px-4">
-                                        <div className="flex items-center gap-1">
-                                            <button
-                                                onClick={() => handleViewDetails(itineraire)}
-                                                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                                                title="Voir détails">
-                                                <Eye size={14}/>
-                                            </button>
-                                            <button
-                                                onClick={() => handleEditItineraire(itineraire)}
-                                                className="p-1.5 text-gray-600 hover:bg-gray-50 rounded transition-colors"
-                                                title="Modifier">
-                                                <Edit size={14}/>
-                                            </button>
-                                            <button
-                                                onClick={() => handleDeleteItineraire(itineraire.itinary_id)}
-                                                className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
-                                                title="Supprimer">
-                                                <Trash2 size={14}/>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
+                                {loading ? (
+                                    [...Array(4)].map((_, i) => (
+                                        <tr key={i} className="border-b border-gray-100">
+                                            <td className="py-3 px-4">
+                                                <div className="space-y-2">
+                                                    <div className="h-4 bg-gray-200 rounded animate-pulse w-32" />
+                                                    <div className="h-3 bg-gray-100 rounded animate-pulse w-20" />
+                                                    <div className="h-5 bg-gray-100 rounded animate-pulse w-14" />
+                                                </div>
+                                            </td>
+                                            <td className="py-3 px-4">
+                                                <div className="space-y-2">
+                                                    <div className="h-3 bg-gray-200 rounded animate-pulse w-28" />
+                                                    <div className="h-3 bg-gray-100 rounded animate-pulse w-4 mx-auto" />
+                                                    <div className="h-3 bg-gray-200 rounded animate-pulse w-28" />
+                                                </div>
+                                            </td>
+                                            <td className="py-3 px-4">
+                                                <div className="space-y-2">
+                                                    <div className="h-3 bg-gray-200 rounded animate-pulse w-24" />
+                                                    <div className="h-3 bg-gray-200 rounded animate-pulse w-20" />
+                                                </div>
+                                            </td>
+                                            <td className="py-3 px-4">
+                                                <div className="flex gap-1">
+                                                    <div className="h-7 w-7 bg-gray-200 rounded animate-pulse" />
+                                                    <div className="h-7 w-7 bg-gray-200 rounded animate-pulse" />
+                                                    <div className="h-7 w-7 bg-gray-200 rounded animate-pulse" />
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    filteredItineraires.map((itineraire) => (
+                                        <tr key={itineraire.itinerary_id}
+                                            className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                                            <td className="py-3 px-4">
+                                                <div>
+                                                    <div className="font-semibold text-gray-800 text-sm">
+                                                        {itineraire.itinerary_name || itineraire.itenary_name || 'Sans nom'}
+                                                    </div>
+                                                    <div className="text-xs text-gray-500 mt-1">
+                                                        {itineraire.route_name || 'Route non définie'}
+                                                    </div>
+                                                    <div className="mt-1">
+                                                        <span className={getDirectionBadge(itineraire.direction)}>
+                                                            {itineraire.direction || 'N/A'}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="py-3 px-4">
+                                                <div className="space-y-2">
+                                                    <div className="flex items-center gap-2 text-xs">
+                                                        <MapPin size={12} className="text-green-500" />
+                                                        <span className="text-gray-700 font-medium">
+                                                            {getStationNameById(itineraire.departure_station)}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center justify-center">
+                                                        <ArrowRight size={14} className="text-gray-400" />
+                                                    </div>
+                                                    <div className="flex items-center gap-2 text-xs">
+                                                        <MapPin size={12} className="text-red-500" />
+                                                        <span className="text-gray-700 font-medium">
+                                                            {getStationNameById(itineraire.arrival_station)}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="py-3 px-4">
+                                                <div className="space-y-1 text-xs">
+                                                    <div className="text-gray-700">
+                                                        <span
+                                                            className="font-medium">Distance:</span> {itineraire.distance || 0} km
+                                                    </div>
+                                                    <div className="text-gray-700">
+                                                        <span
+                                                            className="font-medium">Durée:</span> {itineraire.estimated_duration || 0} min
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="py-3 px-4">
+                                                <div className="flex items-center gap-1">
+                                                    <button
+                                                        onClick={() => handleViewDetails(itineraire)}
+                                                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                                        title="Voir détails">
+                                                        <Eye size={14} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleEditItineraire(itineraire)}
+                                                        className="p-1.5 text-gray-600 hover:bg-gray-50 rounded transition-colors"
+                                                        title="Modifier">
+                                                        <Edit size={14} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteItineraire(itineraire.itinary_id)}
+                                                        className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
+                                                        title="Supprimer">
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
                             </tbody>
                         </table>
                     </div>
@@ -537,7 +547,6 @@ const ItinerairesPage = () => {
                                 </div>
 
                                 {/* Stations */}
-                                // Remplacer la section "Stations" dans le modal par :
                                 <div className="border-b pb-4">
                                     <h3 className="text-lg font-semibold text-gray-700 mb-4">Stations</h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -640,11 +649,10 @@ const ItinerairesPage = () => {
                                     <button
                                         type="submit"
                                         disabled={submitting}
-                                        className={`px-6 py-2 rounded-lg transition-colors ${
-                                            submitting
+                                        className={`px-6 py-2 rounded-lg transition-colors ${submitting
                                                 ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
                                                 : 'bg-blue-600 text-white hover:bg-blue-700'
-                                        }`}
+                                            }`}
                                     >
                                         {submitting ? 'Création...' : 'Créer l\'itinéraire'}
                                     </button>
