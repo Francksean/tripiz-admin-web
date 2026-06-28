@@ -1,61 +1,26 @@
-// Stats Cards Component
-import {Plus, UserCheck, Users, UserX} from "lucide-react";
+import { Users, UserCheck, UserX, Plus } from "lucide-react";
 
-export const StatsCards = ({ users, stats }) => {
-    // Utiliser prioritairement les stats des endpoints, avec fallback sur le calcul local
-    const defaultStats = [
-        {
-            title: 'Total Utilisateurs',
-            value: stats?.total || 0, // Utiliser directement la valeur de l'endpoint
-            icon: Users,
-            bgColor: 'bg-blue-100',
-            iconColor: 'text-blue-600',
-        },
-        {
-            title: 'Utilisateurs En ligne',
-            value: stats?.online || 0, // Utiliser directement la valeur de l'endpoint
-            icon: UserCheck,
-            bgColor: 'bg-green-100',
-            iconColor: 'text-green-600',
-        },
-        {
-            title: 'Utilisateurs Bloqués',
-            value: stats?.blocked || 0, // Utiliser directement la valeur de l'endpoint
-            icon: UserX,
-            bgColor: 'bg-red-100',
-            iconColor: 'text-red-600',
-        },
-        {
-            title: 'Nouveaux ce mois',
-            value: stats?.thisMonth || 0, // Utiliser directement la valeur de l'endpoint
-            icon: Plus,
-            bgColor: 'bg-yellow-100',
-            iconColor: 'text-yellow-600',
-        }
-    ];
+const STATS_CONFIG = [
+    { key: 'total',      title: 'Total Utilisateurs',    Icon: Users,      bg: 'bg-blue-100',   color: 'text-blue-600'   },
+    { key: 'online',     title: 'Utilisateurs en ligne', Icon: UserCheck,  bg: 'bg-green-100',  color: 'text-green-600'  },
+    { key: 'blocked',    title: 'Utilisateurs bloqués',  Icon: UserX,      bg: 'bg-red-100',    color: 'text-red-600'    },
+    { key: 'thisMonth',  title: 'Nouveaux ce mois',      Icon: Plus,       bg: 'bg-amber-100',  color: 'text-amber-600'  },
+];
 
-    return (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 xl:gap-6 mb-4 xl:mb-8">
-            {defaultStats.map((stat, index) => (
-                <div
-                    key={index}
-                    className="bg-white p-3 xl:p-6 rounded-xl xl:rounded-2xl border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-                >
-                    <div className="flex items-center justify-between">
-                        <div className="min-w-0 flex-1">
-                            <p className="text-xs xl:text-sm font-medium text-gray-600 truncate">
-                                {stat.title}
-                            </p>
-                            <p className="text-lg xl:text-3xl font-bold mt-1 xl:mt-2 text-gray-800">
-                                {stat.value}
-                            </p>
-                        </div>
-                        <div className={`p-2 xl:p-3 rounded-lg xl:rounded-xl ${stat.bgColor} flex-shrink-0 ml-2`}>
-                            <stat.icon className={`w-4 h-4 xl:w-6 xl:h-6 ${stat.iconColor}`} />
-                        </div>
+export const StatsCards = ({ stats = {} }) => (
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+        {STATS_CONFIG.map(({ key, title, Icon, bg, color }) => (
+            <div key={key} className="bg-white rounded-lg p-3 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                <div className="flex items-center justify-between">
+                    <div className="min-w-0">
+                        <p className="text-xs text-gray-500 font-medium truncate">{title}</p>
+                        <p className="text-xl font-bold text-gray-800 mt-1">{stats[key] ?? 0}</p>
+                    </div>
+                    <div className={`w-10 h-10 rounded-lg ${bg} flex items-center justify-center flex-shrink-0 ml-2`}>
+                        <Icon className={`w-5 h-5 ${color}`} />
                     </div>
                 </div>
-            ))}
-        </div>
-    );
-};
+            </div>
+        ))}
+    </div>
+);

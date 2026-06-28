@@ -1,202 +1,208 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, AlertCircle } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { X, Save, AlertCircle, User, Route, MapPin, CreditCard } from 'lucide-react';
 
+// ── Composants & helpers hors composant principal ─────────────────────────────
+const Field = ({ label, error, children }) => (
+    <div>
+        <label className="block text-xs font-medium text-gray-500 mb-1.5">{label}</label>
+        {children}
+        {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+    </div>
+);
+
+const SectionHeader = ({ icon: Icon, title, iconColor = 'text-blue-600' }) => (
+    <div className="flex items-center gap-2 mb-3">
+        <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+            <Icon className={`w-3.5 h-3.5 ${iconColor}`} />
+        </div>
+        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{title}</h3>
+    </div>
+);
+
+const inputCls = `w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white
+    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`;
+
+// ── Composant principal ───────────────────────────────────────────────────────
 const EditTicketModal = ({ isOpen, onClose, ticket, onSave }) => {
     const [formData, setFormData] = useState({
-        user_name: '',
-        route_name: '',
-        departure_station: '',
-        arrival_station: '',
-        price_paid: '',
-        ticket_status: 'VALIDE'
+        user_name: '', route_name: '',
+        departure_station: '', arrival_station: '',
+        price_paid: '', ticket_status: 'VALIDE',
     });
 
     useEffect(() => {
-        if (ticket) {
+        if (isOpen && ticket) {
             setFormData({
-                user_name: ticket.user_name,
-                route_name: ticket.route_name,
-                departure_station: ticket.departure_station,
-                arrival_station: ticket.arrival_station,
-                price_paid: ticket.price_paid,
-                ticket_status: ticket.ticket_status
+                user_name:         ticket.user_name         || '',
+                route_name:        ticket.route_name        || '',
+                departure_station: ticket.departure_station || '',
+                arrival_station:   ticket.arrival_station   || '',
+                price_paid:        ticket.price_paid        ?? '',
+                ticket_status:     ticket.ticket_status     || 'VALIDE',
             });
         }
-    }, [ticket]);
-
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-    };
-
-    const handleSubmit = () => {
-        onSave({ ...ticket, ...formData });
-        onClose();
-    };
+    }, [isOpen, ticket]);
 
     if (!isOpen || !ticket) return null;
 
-    return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-                {/* En-tête */}
-                <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                            <Save className="text-orange-600" size={20} />
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleSubmit = () => {
+        onSave({ ...ticket, ...formData, price_paid: parseFloat(formData.price_paid) });
+        onClose();
+    };
+
+    const modal = (
+        <div
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+            style={{ background: 'rgba(0,0,0,0.5)' }}
+            onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+        >
+            <div className="bg-white rounded-2xl w-full max-w-md max-h-[92vh] overflow-y-auto shadow-2xl border border-gray-100">
+
+                {/* ── En-tête ── */}
+                <div className="sticky top-0 bg-white border-b border-gray-100 px-5 py-4 rounded-t-2xl z-10 flex items-center justify-between">
+                    <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-9 h-9 bg-blue-50 border border-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                            <Save className="w-4 h-4 text-blue-600" />
                         </div>
-                        <div>
-                            <h2 className="text-xl font-bold text-gray-800">Modifier le Ticket</h2>
-                            <p className="text-sm text-gray-600">{ticket.ticket_number}</p>
+                        <div className="min-w-0">
+                            <h2 className="text-sm font-semibold text-gray-900">Modifier le ticket</h2>
+                            <p className="text-xs text-gray-400 mt-0.5 truncate">{ticket.ticket_number}</p>
                         </div>
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                        className="w-7 h-7 flex items-center justify-center rounded-lg border border-gray-200
+                            text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors"
                     >
-                        <X size={20} />
+                        <X size={14} />
                     </button>
                 </div>
 
-                {/* Formulaire */}
-                <div className="p-6 space-y-6">
-                    {/* Informations utilisateur */}
-                    <div className="space-y-4">
-                        <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                            Informations utilisateur
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Nom de l'utilisateur
-                                </label>
+                <div className="px-5 py-4 space-y-4">
+
+                    {/* ── Utilisateur & Statut ── */}
+                    <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+                        <SectionHeader icon={User} title="Utilisateur" />
+                        <div className="grid grid-cols-2 gap-3">
+                            <Field label="Nom de l'utilisateur *">
                                 <input
                                     type="text"
                                     name="user_name"
                                     value={formData.user_name}
-                                    onChange={handleInputChange}
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    required
+                                    onChange={handleChange}
+                                    className={inputCls}
+                                    placeholder="Jean Dupont"
                                 />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Statut du ticket
-                                </label>
+                            </Field>
+                            <Field label="Statut *">
                                 <select
                                     name="ticket_status"
                                     value={formData.ticket_status}
-                                    onChange={handleInputChange}
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    onChange={handleChange}
+                                    className={inputCls}
                                 >
-                                    <option value="VALIDE">VALIDE</option>
-                                    <option value="UTILISE">UTILISE</option>
-                                    <option value="EXPIRE">EXPIRE</option>
-                                    <option value="ANNULE">ANNULE</option>
+                                    <option value="VALIDE">Valide</option>
+                                    <option value="UTILISE">Utilisé</option>
+                                    <option value="EXPIRE">Expiré</option>
+                                    <option value="ANNULE">Annulé</option>
                                 </select>
-                            </div>
+                            </Field>
                         </div>
                     </div>
 
-                    {/* Informations de trajet */}
-                    <div className="space-y-4">
-                        <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                            <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                            Informations de trajet
-                        </h3>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Ligne de transport
-                            </label>
+                    {/* ── Trajet ── */}
+                    <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+                        <SectionHeader icon={Route} title="Trajet" iconColor="text-purple-600" />
+                        <Field label="Ligne de transport *">
                             <input
                                 type="text"
                                 name="route_name"
                                 value={formData.route_name}
-                                onChange={handleInputChange}
-                                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                required
+                                onChange={handleChange}
+                                className={inputCls}
+                                placeholder="Ligne A"
                             />
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Station de départ
-                                </label>
+                        </Field>
+                        <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-2">
+                            <Field label="Station de départ *">
                                 <input
                                     type="text"
                                     name="departure_station"
                                     value={formData.departure_station}
-                                    onChange={handleInputChange}
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    required
+                                    onChange={handleChange}
+                                    className={inputCls}
+                                    placeholder="Gare Centrale"
                                 />
+                            </Field>
+                            <div className="flex items-center justify-center pb-2">
+                                <div className="w-6 h-6 rounded-full border border-gray-200 bg-white flex items-center justify-center flex-shrink-0">
+                                    <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+                                        <path d="M2 6h8M7 3l3 3-3 3" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                    </svg>
+                                </div>
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Station d'arrivée
-                                </label>
+                            <Field label="Station d'arrivée *">
                                 <input
                                     type="text"
                                     name="arrival_station"
                                     value={formData.arrival_station}
-                                    onChange={handleInputChange}
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    required
+                                    onChange={handleChange}
+                                    className={inputCls}
+                                    placeholder="Aéroport"
                                 />
+                            </Field>
+                        </div>
+                    </div>
+
+                    {/* ── Prix ── */}
+                    <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+                        <SectionHeader icon={CreditCard} title="Paiement" iconColor="text-green-600" />
+                        <Field label="Prix (FCFA) *">
+                            <div className="relative">
+                                <input
+                                    type="number"
+                                    name="price_paid"
+                                    value={formData.price_paid}
+                                    onChange={handleChange}
+                                    className={`${inputCls} pr-16`}
+                                    min="0"
+                                    step="0.01"
+                                    placeholder="500"
+                                />
+                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">FCFA</span>
                             </div>
-                        </div>
+                        </Field>
                     </div>
 
-                    {/* Informations financières */}
-                    <div className="space-y-4">
-                        <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                            Informations financières
-                        </h3>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Prix (FCFA)
-                            </label>
-                            <input
-                                type="number"
-                                name="price_paid"
-                                value={formData.price_paid}
-                                onChange={handleInputChange}
-                                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                min="0"
-                                step="0.01"
-                                required
-                            />
-                        </div>
+                    {/* ── Note ── */}
+                    <div className="flex items-start gap-2.5 p-3 bg-amber-50 border border-amber-100 rounded-xl">
+                        <AlertCircle size={14} className="text-amber-600 mt-0.5 flex-shrink-0" />
+                        <p className="text-xs text-amber-700">
+                            Les dates d'achat, d'utilisation et d'expiration ne peuvent pas être modifiées.
+                        </p>
                     </div>
 
-                    {/* Note d'information */}
-                    <div className="flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                        <AlertCircle size={20} className="text-amber-600 mt-0.5 flex-shrink-0" />
-                        <div className="text-sm text-amber-800">
-                            <strong>Note :</strong> Les dates d'achat, d'utilisation et d'expiration ne peuvent pas être modifiées.
-                            Seules les informations d'utilisateur, de trajet et le prix peuvent être mis à jour.
-                        </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                    {/* ── Actions ── */}
+                    <div className="flex justify-end gap-2.5 pt-1 border-t border-gray-100">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                            className="px-5 py-2 text-sm text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
                         >
                             Annuler
                         </button>
                         <button
                             onClick={handleSubmit}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                            className="flex items-center gap-2 px-5 py-2 text-sm font-medium text-white
+                                bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors"
                         >
-                            <Save size={16} />
+                            <Save size={14} />
                             Sauvegarder
                         </button>
                     </div>
@@ -204,6 +210,8 @@ const EditTicketModal = ({ isOpen, onClose, ticket, onSave }) => {
             </div>
         </div>
     );
+
+    return createPortal(modal, document.body);
 };
 
 export default EditTicketModal;

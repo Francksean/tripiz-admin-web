@@ -1,5 +1,6 @@
 // Configuration API
-const API_BASE_URL = 'https://tripiz-api-production.up.railway.app';
+// const API_BASE_URL = 'https://tripiz-api-production.up.railway.app';
+const API_BASE_URL = 'http://localhost:8080';
 
 const api = {
     async request(endpoint, options = {}) {

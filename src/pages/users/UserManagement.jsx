@@ -145,6 +145,8 @@ const TripizUserManagement = () => {
         }
     };
 
+    const selectCls = "px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white";
+
     return (
         <div className="h-screen flex bg-gradient-to-br from-gray-50 to-blue-50 overflow-hidden">
 
@@ -163,68 +165,26 @@ const TripizUserManagement = () => {
                 <div className="p-4 lg:p-8">
 
                     {/* Header */}
-                    <div className="mb-6 lg:mb-8">
-                        <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6 gap-4">
-                            <div>
-                                <h1 className="text-xl lg:text-2xl font-bold text-gray-800">
-                                    Gestion des Utilisateurs
-                                </h1>
-                                <p className="text-gray-600 mt-1 text-sm">
-                                    Gérez les utilisateurs de votre plateforme
-                                </p>
-                            </div>
-                            <button
-                                onClick={handleCreateUser}
-                                disabled={loading}
-                                className="flex items-center px-3 sm:px-5 py-3 text-sm bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-xl hover:scale-105 transition-all shadow-lg hover:shadow-xl w-fit disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                <Plus className="w-4 h-4 mr-2"/>
-                                Nouveau Chauffeur
-                            </button>
+                    <div className="mb-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                        <div>
+                            <h1 className="text-xl lg:text-2xl font-bold text-gray-800">Gestion des Utilisateurs</h1>
+                            <p className="text-gray-500 mt-1 text-sm">Gérez les utilisateurs de votre plateforme</p>
                         </div>
-
-                        {/* Barre de recherche - visible seulement si des utilisateurs existent */}
-                        {!loading && users.length > 0 && (
-                            <div className="bg-white rounded-xl xl:rounded-2xl p-4 xl:p-6 mb-4 xl:mb-8 shadow-lg">
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div className="relative">
-                                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"/>
-                                        <input
-                                            type="text"
-                                            placeholder="Rechercher par nom ou email..."
-                                            value={searchTerm}
-                                            onChange={(e) => setSearchTerm(e.target.value)}
-                                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
-                                        />
-                                    </div>
-                                    <select
-                                        value={filterRole}
-                                        onChange={(e) => setFilterRole(e.target.value)}
-                                        className="px-4 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
-                                    >
-                                        <option value="all">Tous les rôles</option>
-                                        <option value="admin">Administrateur</option>
-                                        <option value="Driver">Chauffeur</option>
-                                        <option value="client">Client</option>
-                                    </select>
-                                    <select
-                                        value={filterStatus}
-                                        onChange={(e) => setFilterStatus(e.target.value)}
-                                        className="px-4 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
-                                    >
-                                        <option value="all">Tous les statuts</option>
-                                        <option value="online">En ligne</option>
-                                        <option value="offline">Deconnecter</option>
-                                        <option value="blocked">Bloqué</option>
-                                    </select>
-                                </div>
-                            </div>
-                        )}
+                        <button
+                            onClick={handleCreateUser}
+                            disabled={loading}
+                            className="flex items-center px-4 sm:px-5 py-3 text-sm bg-gradient-to-r from-blue-600 to-blue-700
+                                text-white font-medium rounded-xl hover:scale-105 transition-all shadow-lg hover:shadow-xl
+                                w-fit disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <Plus className="w-4 h-4 mr-2"/> Nouveau Chauffeur
+                        </button>
                     </div>
 
                     {/* Erreur */}
                     {error && (
-                        <div className="mb-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded-lg flex items-center justify-between">
+                        <div
+                            className="mb-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded-lg flex items-center justify-between">
                             <span>{error}</span>
                             <button
                                 onClick={loadData}
@@ -238,8 +198,41 @@ const TripizUserManagement = () => {
                     {/* Stats Cards - toujours affichées */}
                     <StatsCards users={users} stats={stats}/>
 
+                    {/* Filtres — visibles seulement si des utilisateurs existent */}
+                    {!loading && users.length > 0 && (
+                        <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-100 mb-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4"/>
+                                    <input
+                                        type="text"
+                                        placeholder="Rechercher par nom ou email…"
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                </div>
+                                <select value={filterRole} onChange={(e) => setFilterRole(e.target.value)}
+                                        className={selectCls}>
+                                    <option value="all">Tous les rôles</option>
+                                    <option value="admin">Administrateur</option>
+                                    <option value="Driver">Chauffeur</option>
+                                    <option value="client">Client</option>
+                                </select>
+                                <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
+                                        className={selectCls}>
+                                    <option value="all">Tous les statuts</option>
+                                    <option value="online">En ligne</option>
+                                    <option value="offline">Déconnecté</option>
+                                    <option value="blocked">Bloqué</option>
+                                </select>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Tableau / états alternatifs */}
-                    <div className="bg-white rounded-xl xl:rounded-2xl border border-gray-200 overflow-hidden shadow-lg">
+                    <div
+                        className="bg-white rounded-xl xl:rounded-2xl border border-gray-200 overflow-hidden shadow-lg">
 
                         {/* Spinner inline pendant le chargement */}
                         {loading && (

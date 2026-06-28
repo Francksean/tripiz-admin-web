@@ -1,134 +1,202 @@
-import {useLocation, useNavigate} from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
-    Bus,
-    Users,
-    BarChart3,
-    Settings,
-    LogOut,
-    Menu,
-    X,
-    Home,
-    Route,
-    CreditCard,
-    Bell,
-    User,
-    Map
+    Bus, Users, BarChart3, LogOut, Home, Route,
+    CreditCard, User, Map, ChevronLeft, ChevronRight
 } from 'lucide-react';
 
-// Sidebar Component
 export const TripizSidebar = ({ isCollapsed, onToggleCollapse, isMobile, onMobileClose }) => {
     const navigate = useNavigate();
     const location = useLocation();
 
     const handleClick = (id) => {
         navigate(`/${id}`);
+        if (isMobile) onMobileClose?.();
     };
 
-    // Extrait le segment de l'URL (ex: "/users" → "users")
     const currentPath = location.pathname.slice(1) || 'dashboard';
 
     const menuItems = [
-        // { id: 'dashboard', icon: Home, label: 'Tableau de bord', labelEn: 'Dashboard' },
-        { id: 'users', icon: Users, label: 'Utilisateurs', labelEn: 'Users' },
-        { id: 'routes', icon: Route, label: 'Itinéraires', labelEn: 'Routes' },
-        // { id: 'trips', icon: Map, label: 'Trajets', labelEn: 'Trips' },
-        { id: 'buses', icon: Bus, label: 'Bus', labelEn: 'Routes' },
-        // { id: 'tickets', icon: CreditCard, label: 'Billets', labelEn: 'Tickets' },
-        // { id: 'stats', icon: BarChart3, label: 'Statistiques', labelEn: 'Statistics' },
-        // { id: 'notifications', icon: Bell, label: 'Notifications', labelEn: 'Notifications' },
-        // { id: 'settings', icon: Settings, label: 'Paramètres', labelEn: 'Settings' }
+        { id: 'dashboard', icon: Home,       label: 'Tableau de bord' },
+        { id: 'users',     icon: Users,      label: 'Utilisateurs' },
+        { id: 'routes',    icon: Route,      label: 'Itinéraires' },
+        { id: 'trips',     icon: Map,        label: 'Trajets' },
+        { id: 'buses',     icon: Bus,        label: 'Bus' },
+        { id: 'tickets',   icon: CreditCard, label: 'Billets' },
+        { id: 'stats',     icon: BarChart3,  label: 'Statistiques' },
     ];
 
+    const collapsed = isCollapsed && !isMobile;
 
     const sidebarClasses = isMobile
-        ? `fixed inset-y-0 left-0 z-30 w-64 transform transition-transform duration-300 ${isCollapsed ? '-translate-x-full' : 'translate-x-0'}`
-        : `transition-all duration-300 ${isCollapsed ? 'w-16' : 'w-64'}`;
+        ? `fixed inset-y-0 left-0 z-30 w-64 transform transition-transform duration-300 ease-in-out ${isCollapsed ? '-translate-x-full' : 'translate-x-0'}`
+        : `relative transition-all duration-300 ease-in-out flex-shrink-0 ${collapsed ? 'w-[72px]' : 'w-56 xl:w-64'}`;
 
     return (
         <>
-            {/* Mobile Overlay */}
+            {/* Mobile overlay */}
             {isMobile && !isCollapsed && (
                 <div
-                    className="fixed inset-0 bg-black bg-opacity-50 z-20"
+                    className="fixed inset-0 bg-black bg-opacity-40 z-20"
                     onClick={onMobileClose}
                 />
             )}
 
-            <div className={`${sidebarClasses} h-full bg-gray-50 border-r border-gray-200 flex flex-col`}>
-                {/* Header */}
-                <div className="p-3 xl:p-4 border-b border-gray-200 flex-shrink-0">
-                    <div className="flex items-center justify-between">
-                        {(!isCollapsed || isMobile) && (
-                            <div className="flex items-center">
-                                <div className="bg-blue-100 p-2 rounded-xl mr-3 border border-blue-200">
-                                    <Bus className="w-5 h-5 xl:w-6 xl:h-6 text-blue-600" />
-                                </div>
-                                <div>
-                                    <h1 className="text-base xl:text-lg font-bold text-gray-800">TRIPIZ</h1>
-                                    <p className="text-xs text-gray-600">Admin Panel</p>
-                                </div>
+            <div className={`${sidebarClasses} h-full bg-white border-r border-gray-100 flex flex-col select-none`}>
+
+                {/* ── Header ── */}
+                <div className={`relative flex items-center border-b border-gray-100 flex-shrink-0 h-14 xl:h-16 ${collapsed ? 'justify-center' : 'justify-between px-4'}`}>
+                    {!collapsed && (
+                        <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <Bus className="w-4 h-4 text-white" />
                             </div>
-                        )}
-                        <button
-                            onClick={onToggleCollapse}
-                            className="p-2 rounded-lg hover:bg-white hover:shadow-sm transition-all duration-200 text-blue-600"
-                        >
-                            {(isCollapsed && !isMobile) ? <Menu className="w-4 h-4 xl:w-5 xl:h-5" /> : <X className="w-4 h-4 xl:w-5 xl:h-5" />}
-                        </button>
-                    </div>
-                </div>
-
-                {/* Navigation */}
-                <nav className="flex-1 p-3 xl:p-4 space-y-1 xl:space-y-2 overflow-y-auto">
-                    {menuItems.map((item) => {
-                        const isActive = currentPath === item.id; // Simulate active state
-
-                        return (
-                            <button
-                                key={item.id}
-                                onClick={() => handleClick(item.id)}
-                                className={`w-full flex items-center p-2 xl:p-3 rounded-xl transition-all duration-300 group ${
-                                    isActive
-                                        ? 'bg-blue-100 text-blue-600 shadow-lg scale-105 border border-blue-200'
-                                        : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600 hover:scale-102'
-                                }`}
-                            >
-                                <item.icon className={`w-4 h-4 xl:w-5 xl:h-5 ${(isCollapsed && !isMobile) ? 'mx-auto' : 'mr-3'} group-hover:scale-110 transition-transform duration-300`} />
-                                {(!isCollapsed || isMobile) && (
-                                    <span className="font-medium text-xs xl:text-sm">{item.label}</span>
-                                )}
-                                {isActive && (!isCollapsed || isMobile) && (
-                                    <div className="ml-auto w-2 h-2 bg-blue-600 rounded-full animate-pulse"></div>
-                                )}
-                            </button>
-                        );
-                    })}
-                </nav>
-
-                {/* Profile & Logout - Always visible */}
-                <div className="p-3 xl:p-4 border-t border-gray-200 space-y-2 flex-shrink-0">
-                    {(!isCollapsed || isMobile) && (
-                        <div className="flex items-center p-2 xl:p-3 rounded-xl bg-blue-50">
-                            <div className="w-7 h-7 xl:w-8 xl:h-8 bg-gradient-to-r from-blue-600 to-blue-700 rounded-full mr-3 flex items-center justify-center flex-shrink-0">
-                                <User className="w-3 h-3 xl:w-4 xl:h-4 text-white" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-xs xl:text-sm font-medium text-gray-800 truncate">Admin SOCATUR</p>
-                                <p className="text-xs text-gray-600 truncate">admin@socatur.cm</p>
+                            <div className="min-w-0">
+                                <p className="text-sm font-semibold text-gray-900 leading-tight">TRIPIZ</p>
+                                <p className="text-[11px] text-gray-400 leading-tight">Admin Panel</p>
                             </div>
                         </div>
                     )}
 
-                    <button className="w-full flex items-center p-2 xl:p-3 rounded-xl transition-all duration-300 hover:bg-red-50 group">
-                        <LogOut className={`w-4 h-4 xl:w-5 xl:h-5 ${(isCollapsed && !isMobile) ? 'mx-auto' : 'mr-3'} text-red-500 group-hover:scale-110 transition-transform duration-300`} />
-                        {(!isCollapsed || isMobile) && (
-                            <span className="font-medium text-xs xl:text-sm text-red-500">Déconnexion</span>
+                    {collapsed && (
+                        <div className="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center">
+                            <Bus className="w-5 h-5 text-white" />
+                        </div>
+                    )}
+
+                    {!isMobile && (
+                        <button
+                            onClick={onToggleCollapse}
+                            className="absolute -right-3 top-1/2 -translate-y-1/2 z-10
+                                w-6 h-6 rounded-full border border-gray-200 bg-white shadow-sm
+                                flex items-center justify-center
+                                text-blue-600 hover:bg-blue-50 hover:border-blue-300
+                                transition-all duration-200"
+                            title={collapsed ? 'Déplier' : 'Réduire'}
+                        >
+                            {collapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronLeft className="w-3 h-3" />}
+                        </button>
+                    )}
+                </div>
+
+                {/* ── Navigation ── */}
+                <nav className={`flex-1 overflow-y-auto overflow-x-hidden py-3 space-y-0.5 ${collapsed ? 'px-2' : 'px-3'}`}>
+                    {menuItems.map((item) => {
+                        const isActive = currentPath === item.id;
+                        const Icon = item.icon;
+
+                        return (
+                            <div key={item.id} className="relative group">
+                                <button
+                                    onClick={() => handleClick(item.id)}
+                                    className={`
+                                        w-full flex items-center rounded-lg transition-all duration-150
+                                        ${collapsed ? 'justify-center w-10 h-10 mx-auto' : 'gap-3 px-3 py-2.5'}
+                                        ${isActive
+                                        ? 'bg-blue-50 text-blue-700'
+                                        : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800'
+                                    }
+                                    `}
+                                >
+                                    <Icon className={`
+                                        flex-shrink-0 transition-colors
+                                        ${collapsed ? 'w-5 h-5 xl:w-6 xl:h-6' : 'w-4 h-4 xl:w-[18px] xl:h-[18px]'}
+                                        ${isActive ? 'text-blue-600' : ''}
+                                    `} />
+                                    {!collapsed && (
+                                        <span className={`text-xs xl:text-sm font-medium truncate ${isActive ? 'text-blue-700' : ''}`}>
+                                            {item.label}
+                                        </span>
+                                    )}
+                                    {isActive && !collapsed && (
+                                        <span className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-600 flex-shrink-0" />
+                                    )}
+                                </button>
+
+                                {/* Barre indicateur gauche en mode réduit */}
+                                {isActive && collapsed && (
+                                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-blue-600 rounded-r-full" />
+                                )}
+
+                                {/* Tooltip en mode réduit */}
+                                {collapsed && (
+                                    <div className="
+                                        pointer-events-none
+                                        absolute left-full top-1/2 -translate-y-1/2 ml-3 z-50
+                                        bg-gray-900 text-white text-xs font-medium
+                                        rounded-lg px-2.5 py-1.5 whitespace-nowrap shadow-lg
+                                        opacity-0 group-hover:opacity-100 transition-opacity duration-150
+                                    ">
+                                        {item.label}
+                                        <span className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900" />
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+                </nav>
+
+                {/* ── Profil & Déconnexion ── */}
+                <div className={`border-t border-gray-100 flex-shrink-0 py-3 space-y-1 ${collapsed ? 'px-2' : 'px-3'}`}>
+
+                    {/* Profil */}
+                    {!collapsed ? (
+                        <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-blue-50 mb-1">
+                            <div className="w-7 h-7 xl:w-8 xl:h-8 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
+                                <User className="w-3.5 h-3.5 text-white" />
+                            </div>
+                            <div className="min-w-0">
+                                <p className="text-xs font-medium text-gray-800 truncate leading-tight">Admin SOCATUR</p>
+                                <p className="text-[11px] text-gray-400 truncate leading-tight">admin@socatur.cm</p>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="relative group flex justify-center mb-1">
+                            <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center cursor-default">
+                                <User className="w-5 h-5 text-blue-600" />
+                            </div>
+                            <div className="
+                                pointer-events-none
+                                absolute left-full top-1/2 -translate-y-1/2 ml-3 z-50
+                                bg-gray-900 text-white text-xs rounded-lg px-2.5 py-2 whitespace-nowrap shadow-lg
+                                opacity-0 group-hover:opacity-100 transition-opacity duration-150
+                            ">
+                                <p className="font-medium">Admin SOCATUR</p>
+                                <p className="text-gray-400 text-[11px]">admin@socatur.cm</p>
+                                <span className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900" />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Déconnexion */}
+                    <div className="relative group">
+                        <button className={`
+                            w-full flex items-center rounded-lg transition-all duration-150
+                            text-gray-400 hover:bg-red-50 hover:text-red-600
+                            ${collapsed ? 'justify-center w-10 h-10 mx-auto' : 'gap-3 px-3 py-2.5'}
+                        `}>
+                            <LogOut className={`flex-shrink-0 ${collapsed ? 'w-5 h-5 xl:w-6 xl:h-6' : 'w-4 h-4 xl:w-[18px] xl:h-[18px]'}`} />
+                            {!collapsed && (
+                                <span className="text-xs xl:text-sm font-medium">Déconnexion</span>
+                            )}
+                        </button>
+
+                        {collapsed && (
+                            <div className="
+                                pointer-events-none
+                                absolute left-full top-1/2 -translate-y-1/2 ml-3 z-50
+                                bg-gray-900 text-white text-xs font-medium
+                                rounded-lg px-2.5 py-1.5 whitespace-nowrap shadow-lg
+                                opacity-0 group-hover:opacity-100 transition-opacity duration-150
+                            ">
+                                Déconnexion
+                                <span className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900" />
+                            </div>
                         )}
-                    </button>
+                    </div>
                 </div>
             </div>
         </>
     );
 };
 
-export default TripizSidebar
+export default TripizSidebar;

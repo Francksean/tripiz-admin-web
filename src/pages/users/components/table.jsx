@@ -1,160 +1,120 @@
-// User Table Component
-import {Edit, Mail, User, Phone, Calendar, UserX, Trash2, UserCheck} from "lucide-react";
+import { Mail, Phone, User, Users, UserX, UserCheck, Trash2 } from "lucide-react";
 
+// ── Helpers hors composant ────────────────────────────────────────────────────
+const STATUS_CFG = {
+    online:  { cls: 'bg-green-50 text-green-700',  label: 'En ligne'    },
+    offline: { cls: 'bg-amber-50 text-amber-700',  label: 'Hors ligne'  },
+    blocked: { cls: 'bg-red-50 text-red-700',      label: 'Bloqué'      },
+};
+
+const ROLE_CFG = {
+    admin:  { cls: 'bg-purple-50 text-purple-700', label: 'Admin'       },
+    driver: { cls: 'bg-yellow-50 text-yellow-700', label: 'Chauffeur'   },
+    client: { cls: 'bg-blue-50 text-blue-700',     label: 'Client'      },
+    user:   { cls: 'bg-gray-100 text-gray-600',    label: 'Utilisateur' },
+};
+
+const getUserName = (u) =>
+    (u.first_name || u.last_name)
+        ? `${u.first_name || ''} ${u.last_name || ''}`.trim()
+        : (u.name || '—');
+
+// ── Composant ─────────────────────────────────────────────────────────────────
 export const UserTable = ({ users, onDelete, onToggleStatus }) => {
-    const getStatusBadge = (status) => {
-        // Par défaut, considérer les utilisateurs comme "online" s'ils n'ont pas de statut défini
-        const userStatus = status || 'online';
-
-        if (userStatus === 'online') {
-            return (
-                <span className="px-2 xl:px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                    En ligne
-                </span>
-            );
-        }
-        if (userStatus === 'offline') {
-            return (
-                <span className="px-2 xl:px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">
-                    Hors ligne
-                </span>
-            );
-        }
-        if (userStatus === 'blocked') {
-            return (
-                <span className="px-2 xl:px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">
-                    Bloqué
-                </span>
-            );
-        }
-        // Fallback pour tout autre statut
-        return (
-            <span className="px-2 xl:px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
-                {userStatus}
-            </span>
-        );
-    };
-
-    const getRoleBadge = (role) => {
-        const configs = {
-            admin: { bg: 'bg-purple-100', text: 'text-purple-700', label: 'Admin' },
-            driver: { bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'Chauffeur' },
-            client: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Client' },
-            user: { bg: 'bg-gray-100', text: 'text-gray-700', label: 'Utilisateur' }
-        };
-        const config = configs[role?.toLowerCase()] || configs.user;
-
-        return (
-            <span className={`px-2 xl:px-3 py-1 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
-                {config.label}
-            </span>
-        );
-    };
-
-    if (users.length === 0) {
-        return (
-            <div className="bg-white rounded-xl xl:rounded-2xl border border-gray-200 shadow-lg p-8 text-center">
-                <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500 text-lg">Aucun utilisateur trouvé</p>
-            </div>
-        );
-    }
+    if (!users.length) return null;
 
     return (
-        <div className="bg-white rounded-xl xl:rounded-2xl border border-gray-200 overflow-hidden shadow-lg">
-            <div className="overflow-x-auto">
-                <table className="w-full min-w-[600px]">
-                    <thead className="bg-gray-50">
-                    <tr>
-                        <th className="px-3 xl:px-6 py-3 xl:py-4 text-left text-xs xl:text-sm font-semibold text-gray-700">
-                            Utilisateur
+        <div className="overflow-x-auto">
+            <table className="w-full min-w-[560px]">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                    {['Utilisateur', 'Contact', 'Rôle', 'Statut', 'Actions'].map((h, i) => (
+                        <th key={h} className={`px-4 py-3 text-left text-xs font-semibold text-gray-600 ${i === 1 ? 'hidden md:table-cell' : ''}`}>
+                            {h}
                         </th>
-                        <th className="px-3 xl:px-6 py-3 xl:py-4 text-left text-xs xl:text-sm font-semibold text-gray-700 hidden md:table-cell">
-                            Contact
-                        </th>
-                        <th className="px-3 xl:px-6 py-3 xl:py-4 text-left text-xs xl:text-sm font-semibold text-gray-700">
-                            Rôle
-                        </th>
-                        <th className="px-3 xl:px-6 py-3 xl:py-4 text-left text-xs xl:text-sm font-semibold text-gray-700">
-                            Statut
-                        </th>
-                        <th className="px-3 xl:px-6 py-3 xl:py-4 text-center text-xs xl:text-sm font-semibold text-gray-700">
-                            Actions
-                        </th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {users.map((user, index) => (
-                        <tr
-                            key={user.user_id || index}
-                            className="border-t border-gray-200 hover:bg-gray-50 transition-all duration-200"
-                        >
-                            <td className="px-3 xl:px-6 py-3 xl:py-4">
-                                <div className="flex items-center">
-                                    <div className="w-8 h-8 xl:w-10 xl:h-10 bg-gradient-to-r from-blue-600 to-blue-700 rounded-full mr-2 xl:mr-3 flex items-center justify-center flex-shrink-0">
-                                        <User className="w-3 h-3 xl:w-5 xl:h-5 text-white" />
+                    ))}
+                </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                {users.map((user, idx) => {
+                    const status  = user.status || 'online';
+                    const role    = user.role?.toLowerCase() || 'user';
+                    const sCfg    = STATUS_CFG[status]            || { cls: 'bg-gray-100 text-gray-600', label: status };
+                    const rCfg    = ROLE_CFG[role]                || ROLE_CFG.user;
+                    const isOnline = status === 'online';
+
+                    return (
+                        <tr key={user.user_id || idx} className="hover:bg-gray-50 transition-colors">
+                            {/* Utilisateur */}
+                            <td className="px-4 py-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                                        <User className="w-3.5 h-3.5 text-white" />
                                     </div>
                                     <div className="min-w-0">
-                                        <p className="font-medium text-sm xl:text-base text-gray-800 truncate">
-                                            {(user.first_name || user.last_name)
-                                                ? `${user.first_name || ''} ${user.last_name || ''}`.trim()
-                                                : (user.name || '—')}
-                                        </p>
-                                        <p className="text-xs xl:text-sm text-gray-600 truncate md:hidden">
-                                            {user.email}
-                                        </p>
+                                        <p className="text-sm font-medium text-gray-800 truncate">{getUserName(user)}</p>
+                                        <p className="text-xs text-gray-400 truncate md:hidden">{user.email}</p>
                                     </div>
                                 </div>
                             </td>
-                            <td className="px-3 xl:px-6 py-3 xl:py-4 hidden md:table-cell">
-                                <div className="space-y-1">
-                                    <div className="flex items-center text-xs xl:text-sm">
-                                        <Mail className="w-3 h-3 xl:w-4 xl:h-4 mr-2 text-blue-600 flex-shrink-0" />
-                                        <span className="text-gray-700 truncate">{user.email}</span>
+
+                            {/* Contact */}
+                            <td className="px-4 py-3 hidden md:table-cell">
+                                <div className="space-y-0.5">
+                                    <div className="flex items-center gap-1.5 text-xs text-gray-600">
+                                        <Mail className="w-3 h-3 text-blue-500 flex-shrink-0" />
+                                        <span className="truncate max-w-[180px]">{user.email}</span>
                                     </div>
                                     {user.phone && (
-                                        <div className="flex items-center text-xs xl:text-sm">
-                                            <Phone className="w-3 h-3 xl:w-4 xl:h-4 mr-2 text-blue-600 flex-shrink-0" />
-                                            <span className="text-gray-700">{user.phone}</span>
+                                        <div className="flex items-center gap-1.5 text-xs text-gray-600">
+                                            <Phone className="w-3 h-3 text-blue-500 flex-shrink-0" />
+                                            <span>{user.phone}</span>
                                         </div>
                                     )}
                                 </div>
                             </td>
-                            <td className="px-3 xl:px-6 py-3 xl:py-4">
-                                {getRoleBadge(user.role)}
+
+                            {/* Rôle */}
+                            <td className="px-4 py-3">
+                                    <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${rCfg.cls}`}>
+                                        {rCfg.label}
+                                    </span>
                             </td>
-                            <td className="px-3 xl:px-6 py-3 xl:py-4">
-                                {getStatusBadge(user.status)}
+
+                            {/* Statut */}
+                            <td className="px-4 py-3">
+                                    <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${sCfg.cls}`}>
+                                        {sCfg.label}
+                                    </span>
                             </td>
-                            <td className="px-3 xl:px-6 py-3 xl:py-4">
-                                <div className="flex items-center justify-center space-x-1">
+
+                            {/* Actions */}
+                            <td className="px-4 py-3">
+                                <div className="flex items-center gap-1">
                                     <button
                                         onClick={() => onToggleStatus(user)}
-                                        className={`p-1.5 xl:p-2 rounded-lg transition-all hover:scale-110 group ${
-                                            (user.status || 'online') === 'online' ? 'hover:bg-red-50' : 'hover:bg-green-50'
-                                        }`}
-                                        title={(user.status || 'online') === 'online' ? 'Bloquer' : 'Débloquer'}
+                                        title={isOnline ? 'Bloquer' : 'Débloquer'}
+                                        className={`p-1.5 rounded-lg transition-colors ${isOnline ? 'text-red-500 hover:bg-red-50' : 'text-green-500 hover:bg-green-50'}`}
                                     >
-                                        {(user.status || 'online') === 'online' ? (
-                                            <UserX className="w-3 h-3 xl:w-4 xl:h-4 text-red-500 group-hover:scale-110 transition-transform" />
-                                        ) : (
-                                            <UserCheck className="w-3 h-3 xl:w-4 xl:h-4 text-green-500 group-hover:scale-110 transition-transform" />
-                                        )}
+                                        {isOnline
+                                            ? <UserX    className="w-3.5 h-3.5" />
+                                            : <UserCheck className="w-3.5 h-3.5" />
+                                        }
                                     </button>
                                     <button
                                         onClick={() => onDelete(user)}
-                                        className="p-1.5 xl:p-2 rounded-lg hover:bg-red-50 transition-all hover:scale-110 group"
                                         title="Supprimer"
+                                        className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
                                     >
-                                        <Trash2 className="w-3 h-3 xl:w-4 xl:h-4 text-red-500 group-hover:scale-110 transition-transform" />
+                                        <Trash2 className="w-3.5 h-3.5" />
                                     </button>
                                 </div>
                             </td>
                         </tr>
-                    ))}
-                    </tbody>
-                </table>
-            </div>
+                    );
+                })}
+                </tbody>
+            </table>
         </div>
     );
 };

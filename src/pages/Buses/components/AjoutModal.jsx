@@ -1,88 +1,74 @@
-import React, {useEffect, useState} from 'react';
-import { Bus, Navigation, X, Save } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { Bus, Navigation, X, Save, MapPin } from 'lucide-react';
+import LocationAutocomplete from "./LocationAutoCompletion.jsx";
 
-// Composant Modal d'ajout
-export const ModalAjout = ({activeTab, showAddModal, setShowAddModal, modalMode = 'add', editingItem = null, onSave}) => {
+// ── Composants définis HORS du composant principal pour éviter
+//    la perte de focus à chaque keystroke ─────────────────────────────────────
+const Field = ({ label, error, children }) => (
+    <div>
+        <label className="block text-xs font-medium text-gray-500 mb-1.5">{label}</label>
+        {children}
+        {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+    </div>
+);
+
+const Section = ({ title }) => (
+    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">{title}</p>
+);
+
+// inputCls est une fonction pure, pas un composant, donc elle peut rester dedans
+// mais on la sort quand même pour la clarté
+const getInputCls = (hasError) =>
+    `w-full px-3 py-2 text-sm border rounded-lg
+    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors
+    ${hasError ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white'}`;
+
+// ─────────────────────────────────────────────────────────────────────────────
+export const ModalAjout = ({ activeTab, showAddModal, setShowAddModal, modalMode = 'add', editingItem = null, onSave }) => {
     const [formData, setFormData] = useState({
-        // ID field for editing
         id: null,
-        // Bus fields
-        busNumber: '',
-        matriculation: '',
-        capacity: '',
-        busStatus: 'En service',
-        // Station fields
-        stationName: '',
-        address: '',
-        stationType: 'DEPARTURE',
-        stationStatus: 'ACTIVE',
-        latitude: '',
-        longitude: ''
+        busNumber: '', matriculation: '', capacity: '', busStatus: 'En service',
+        stationName: '', address: '', stationType: 'DEPARTURE', stationStatus: 'ACTIVE',
+        location: null,
     });
-
     const [errors, setErrors] = useState({});
 
-    // Fonction pour réinitialiser le formulaire
     const resetForm = () => {
         setFormData({
             id: null,
-            busNumber: '',
-            matriculation: '',
-            capacity: '',
-            busStatus: 'En service',
-            stationName: '',
-            address: '',
-            stationType: 'DEPARTURE',
-            stationStatus: 'ACTIVE',
-            latitude: '',
-            longitude: ''
+            busNumber: '', matriculation: '', capacity: '', busStatus: 'En service',
+            stationName: '', address: '', stationType: 'DEPARTURE', stationStatus: 'ACTIVE',
+            location: null,
         });
         setErrors({});
     };
 
-    // Effet pour gérer le mode édition/ajout
     useEffect(() => {
         if (modalMode === 'edit' && editingItem) {
-            console.log('EditingItem reçu:', editingItem); // Debug
-
             if (activeTab === 'bus') {
-                // Priorité à 'id' puis 'busId'
-                const busId = editingItem.id || editingItem.busId;
-                console.log('Bus ID trouvé:', busId); // Debug
-
                 setFormData({
-                    id: busId,
+                    id: editingItem.id || editingItem.busId,
                     busNumber: editingItem.bus_number || editingItem.busNumber || '',
                     matriculation: editingItem.immatriculation || editingItem.matriculation || '',
                     capacity: editingItem.capacity ? String(editingItem.capacity) : '',
                     busStatus: editingItem.status || 'En service',
-                    // Reset station fields
-                    stationName: '',
-                    address: '',
-                    stationType: 'DEPARTURE',
-                    latitude: '',
-                    longitude: '',
-                    stationStatus: 'ACTIVE',
+                    stationName: '', address: '', stationType: 'DEPARTURE', stationStatus: 'ACTIVE', location: null,
                 });
             } else {
-                // Pour les stations
-                const stationId = editingItem.id || editingItem.stationId;
-                console.log('Station ID trouvé:', stationId); // Debug
-
+                const existingLocation = (editingItem.latitude && editingItem.longitude) ? {
+                    name: editingItem.address || editingItem.stationName || 'Localisation existante',
+                    latitude: parseFloat(editingItem.latitude),
+                    longitude: parseFloat(editingItem.longitude),
+                } : null;
                 setFormData({
-                    id: stationId,
-                    // Reset bus fields
-                    busNumber: '',
-                    matriculation: '',
-                    capacity: '',
-                    busStatus: 'En service',
-                    // Station fields - attention aux noms de propriétés
+                    id: editingItem.id || editingItem.stationId,
+                    busNumber: '', matriculation: '', capacity: '', busStatus: 'En service',
                     stationName: editingItem.stationName || editingItem.station_name || editingItem.name || '',
                     address: editingItem.address || '',
-                    stationType: editingItem.stationType || editingItem.station_type || editingItem.type || 'DEPARTURE',
-                    latitude: editingItem.latitude ? String(editingItem.latitude) : '',
-                    longitude: editingItem.longitude ? String(editingItem.longitude) : '',
+                    stationType: editingItem.stationType || editingItem.station_type || 'DEPARTURE',
                     stationStatus: editingItem.status || 'ACTIVE',
+                    location: existingLocation,
                 });
             }
         } else if (modalMode === 'add') {
@@ -91,326 +77,240 @@ export const ModalAjout = ({activeTab, showAddModal, setShowAddModal, modalMode 
     }, [modalMode, editingItem, activeTab, showAddModal]);
 
     const handleInputChange = (field, value) => {
-        setFormData(prev => ({
-            ...prev,
-            [field]: value
-        }));
-        // Clear error when user starts typing
-        if (errors[field]) {
-            setErrors(prev => ({
-                ...prev,
-                [field]: ''
-            }));
-        }
+        setFormData(prev => ({ ...prev, [field]: value }));
+        if (errors[field]) setErrors(prev => ({ ...prev, [field]: '' }));
+    };
+
+    const handleLocationChange = (locationObj) => {
+        setFormData(prev => ({ ...prev, location: locationObj }));
+        if (errors.location) setErrors(prev => ({ ...prev, location: '' }));
     };
 
     const validateForm = () => {
         const newErrors = {};
-
         if (activeTab === 'bus') {
-            // Validate bus number as integer
-            if (!formData.busNumber || !String(formData.busNumber).trim() || isNaN(parseInt(formData.busNumber)) || parseInt(formData.busNumber) <= 0) {
-                newErrors.busNumber = 'Le numéro du bus doit être un entier positif';
-            }
-            if (!String(formData.matriculation || '').trim()) newErrors.matriculation = 'L\'immatriculation est requise';
-            if (!formData.capacity || parseInt(formData.capacity) <= 0) newErrors.capacity = 'La capacité doit être supérieure à 0';
+            if (!formData.busNumber || isNaN(parseInt(formData.busNumber)) || parseInt(formData.busNumber) <= 0)
+                newErrors.busNumber = 'Le numéro doit être un entier positif';
+            if (!String(formData.matriculation || '').trim())
+                newErrors.matriculation = "L'immatriculation est requise";
+            if (!formData.capacity || parseInt(formData.capacity) <= 0)
+                newErrors.capacity = 'La capacité doit être supérieure à 0';
         } else {
-            if (!String(formData.stationName || '').trim()) newErrors.stationName = 'Le nom de la station est requis';
-            if (!String(formData.address || '').trim()) newErrors.address = 'L\'adresse est requise';
-
-            // Validation des coordonnées
-            const lat = parseFloat(formData.latitude);
-            const lng = parseFloat(formData.longitude);
-
-            if (!formData.latitude || isNaN(lat)) {
-                newErrors.latitude = 'La latitude est requise et doit être un nombre';
-            } else if (lat < -90 || lat > 90) {
-                newErrors.latitude = 'La latitude doit être entre -90 et 90';
-            }
-
-            if (!formData.longitude || isNaN(lng)) {
-                newErrors.longitude = 'La longitude est requise et doit être un nombre';
-            } else if (lng < -180 || lng > 180) {
-                newErrors.longitude = 'La longitude doit être entre -180 et 180';
-            }
+            if (!String(formData.stationName || '').trim())
+                newErrors.stationName = 'Le nom de la station est requis';
+            if (!String(formData.address || '').trim())
+                newErrors.address = "L'adresse est requise";
+            if (!formData.location?.latitude)
+                newErrors.location = 'Veuillez sélectionner une localisation dans la liste';
         }
-
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (validateForm()) {
-            // Récupération sécurisée de l'ID
-            const itemId = formData.id;
+        if (!validateForm()) return;
+        const itemId = formData.id;
+        if (modalMode === 'edit' && !itemId) { alert('Erreur: ID manquant'); return; }
 
-            console.log('=== DEBUG SUBMIT ===');
-            console.log('Item ID:', itemId);
-            console.log('Modal mode:', modalMode);
-            console.log('Form data:', formData);
-
-            // Vérification critique pour le mode édition
-            if (modalMode === 'edit' && !itemId) {
-                console.error('ERREUR: Pas d\'ID pour la modification!');
-                alert('Erreur: Impossible de modifier - ID manquant');
-                return;
-            }
-
-            // Préparer les données selon le type et le DTO
-            // IMPORTANT: Ne pas inclure l'ID dans le body, il est dans l'URL
-            const dataToSave = activeTab === 'bus' ? {
-                // Respecter le DTO UpdateBusRequestDTO (sans ID)
-                busNumber: parseInt(formData.busNumber),
-                matriculation: formData.matriculation,
-                capacity: parseInt(formData.capacity),
-                status: formData.busStatus
-            } : {
-                // Respecter le DTO CreateStationRequestDTO (sans ID)
-                stationName: formData.stationName,
-                address: formData.address,
-                stationType: formData.stationType,
-                status: formData.stationStatus,
-                latitude: parseFloat(formData.latitude),
-                longitude: parseFloat(formData.longitude)
-            };
-
-            console.log('Données à sauvegarder (sans ID):', dataToSave);
-
-            // Pour le mode édition, passer l'ID séparément
-            if (modalMode === 'edit') {
-                // Ajouter l'ID comme propriété séparée pour la fonction onSave
-                dataToSave.id = itemId;
-            }
-
-            // Appeler la fonction de sauvegarde
-            if (onSave) {
-                onSave(dataToSave, modalMode);
-            }
-
-            handleClose();
-        }
+        const dataToSave = activeTab === 'bus' ? {
+            busNumber: parseInt(formData.busNumber),
+            matriculation: formData.matriculation,
+            capacity: parseInt(formData.capacity),
+            status: formData.busStatus,
+        } : {
+            stationName: formData.stationName,
+            address: formData.address,
+            stationType: formData.stationType,
+            status: formData.stationStatus,
+            latitude: formData.location.latitude,
+            longitude: formData.location.longitude,
+        };
+        if (modalMode === 'edit') dataToSave.id = itemId;
+        if (onSave) onSave(dataToSave, modalMode);
+        handleClose();
     };
 
-
-    const handleClose = () => {
-        setShowAddModal(false);
-        resetForm();
-    };
+    const handleClose = () => { setShowAddModal(false); resetForm(); };
 
     if (!showAddModal) return null;
 
-    return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-                <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-bold text-gray-800 flex items-center gap-3">
-                        {activeTab === 'bus' ? <Bus className="w-6 h-6 text-blue-600"/> :
-                            <Navigation className="w-6 h-6 text-blue-600"/>}
-                        {modalMode === 'edit' ? 'Modifier' : 'Nouveau'} {activeTab === 'bus' ? 'Bus' : 'Station'}
-                    </h2>
+    const isBus = activeTab === 'bus';
+
+    const modal = (
+        <div
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+            style={{ background: 'rgba(0,0,0,0.5)' }}
+            onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
+        >
+            <div className="bg-white rounded-2xl w-full max-w-lg max-h-[92vh] overflow-y-auto shadow-2xl border border-gray-100">
+
+                {/* ── En-tête ── */}
+                <div className="sticky top-0 bg-white border-b border-gray-100 px-5 py-4 rounded-t-2xl z-10 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 bg-blue-50 border border-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                            {isBus
+                                ? <Bus className="w-4 h-4 text-blue-600" />
+                                : <Navigation className="w-4 h-4 text-blue-600" />
+                            }
+                        </div>
+                        <div>
+                            <h2 className="text-sm font-semibold text-gray-900">
+                                {modalMode === 'edit' ? 'Modifier' : 'Nouveau'} {isBus ? 'bus' : 'station'}
+                            </h2>
+                            <p className="text-xs text-gray-400 mt-0.5">
+                                {modalMode === 'edit' ? 'Modifier les informations' : 'Remplir les informations'}
+                            </p>
+                        </div>
+                    </div>
                     <button
                         onClick={handleClose}
-                        className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                        className="w-7 h-7 flex items-center justify-center rounded-lg border border-gray-200
+                            text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors"
                     >
-                        <X size={20}/>
+                        <X size={14} />
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    {activeTab === 'bus' ? (
+                <form onSubmit={handleSubmit} className="px-5 py-4 space-y-5">
+                    {isBus ? (
                         <>
-                            {/* Informations générales du bus */}
-                            <div className="bg-gray-50 p-4 rounded-lg">
-                                <h3 className="font-semibold text-gray-700 mb-4">Informations générales</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Numéro du bus *
-                                        </label>
+                            {/* ── Bus : Informations ── */}
+                            <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+                                <Section title="Informations générales" />
+                                <div className="grid grid-cols-2 gap-3">
+                                    <Field label="Numéro du bus *" error={errors.busNumber}>
                                         <input
-                                            type="number"
-                                            min="1"
-                                            step="1"
-                                            placeholder="ex: 1"
+                                            type="number" min="1" step="1" placeholder="1"
                                             value={formData.busNumber}
                                             onChange={(e) => handleInputChange('busNumber', e.target.value)}
-                                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                                                errors.busNumber ? 'border-red-300' : 'border-gray-200'
-                                            }`}
+                                            className={getInputCls(!!errors.busNumber)}
                                         />
-                                        {errors.busNumber && <p className="text-red-500 text-xs mt-1">{errors.busNumber}</p>}
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Plaque d'immatriculation *
-                                        </label>
+                                    </Field>
+                                    <Field label="Immatriculation *" error={errors.matriculation}>
                                         <input
-                                            type="text"
-                                            placeholder="ex: DLA-2001-CM"
+                                            type="text" placeholder="DLA-2001-CM"
                                             value={formData.matriculation}
                                             onChange={(e) => handleInputChange('matriculation', e.target.value)}
-                                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                                                errors.matriculation ? 'border-red-300' : 'border-gray-200'
-                                            }`}
+                                            className={getInputCls(!!errors.matriculation)}
                                         />
-                                        {errors.matriculation && <p className="text-red-500 text-xs mt-1">{errors.matriculation}</p>}
+                                    </Field>
+                                </div>
+                                <Field label="Capacité (places) *" error={errors.capacity}>
+                                    <div className="relative">
+                                        <input
+                                            type="number" min="1" placeholder="50"
+                                            value={formData.capacity}
+                                            onChange={(e) => handleInputChange('capacity', e.target.value)}
+                                            className={`${getInputCls(!!errors.capacity)} pr-14`}
+                                        />
+                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">places</span>
                                     </div>
-                                </div>
-                                <div className="mt-4">
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Capacité (places) *
-                                    </label>
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        placeholder="ex: 50"
-                                        value={formData.capacity}
-                                        onChange={(e) => handleInputChange('capacity', e.target.value)}
-                                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                                            errors.capacity ? 'border-red-300' : 'border-gray-200'
-                                        }`}
-                                    />
-                                    {errors.capacity && <p className="text-red-500 text-xs mt-1">{errors.capacity}</p>}
-                                </div>
+                                </Field>
                             </div>
 
-                            {/* Affectation et statut */}
-                            <div className="bg-gray-50 p-4 rounded-lg">
-                                <h3 className="font-semibold text-gray-700 mb-4">Affectation et statut</h3>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Statut *</label>
+                            {/* ── Bus : Statut ── */}
+                            <div className="bg-gray-50 rounded-xl p-4">
+                                <Section title="Statut" />
+                                <Field label="Statut actuel *">
                                     <select
                                         value={formData.busStatus}
                                         onChange={(e) => handleInputChange('busStatus', e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className={getInputCls(false)}
                                     >
-                                        <option value="En service">En Service</option>
+                                        <option value="En service">En service</option>
                                         <option value="En maintenance">En maintenance</option>
                                     </select>
-                                </div>
+                                </Field>
                             </div>
                         </>
                     ) : (
                         <>
-                            {/* Informations générales de la station */}
-                            <div className="bg-gray-50 p-4 rounded-lg">
-                                <h3 className="font-semibold text-gray-700 mb-4">Informations générales</h3>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Nom de la station *
-                                    </label>
+                            {/* ── Station : Informations ── */}
+                            <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+                                <Section title="Informations générales" />
+                                <Field label="Nom de la station *" error={errors.stationName}>
                                     <input
-                                        type="text"
-                                        placeholder="ex: Gare Centrale"
+                                        type="text" placeholder="Gare Centrale"
                                         value={formData.stationName}
                                         onChange={(e) => handleInputChange('stationName', e.target.value)}
-                                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                                            errors.stationName ? 'border-red-300' : 'border-gray-200'
-                                        }`}
+                                        className={getInputCls(!!errors.stationName)}
                                     />
-                                    {errors.stationName && <p className="text-red-500 text-xs mt-1">{errors.stationName}</p>}
-                                </div>
-
-                                <div className="mt-4">
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Adresse complète *
-                                    </label>
+                                </Field>
+                                <Field label="Adresse complète *" error={errors.address}>
                                     <textarea
-                                        placeholder="ex: Avenue de la Liberté, Akwa, Douala"
-                                        rows="3"
+                                        placeholder="Avenue de la Liberté, Akwa, Douala"
+                                        rows="2"
                                         value={formData.address}
                                         onChange={(e) => handleInputChange('address', e.target.value)}
-                                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                                            errors.address ? 'border-red-300' : 'border-gray-200'
-                                        }`}
+                                        className={`${getInputCls(!!errors.address)} resize-none`}
                                     />
-                                    {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Latitude *
-                                        </label>
-                                        <input
-                                            type="number"
-                                            step="any"
-                                            placeholder="ex: 3.8480"
-                                            value={formData.latitude}
-                                            onChange={(e) => handleInputChange('latitude', e.target.value)}
-                                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                                                errors.latitude ? 'border-red-300' : 'border-gray-200'
-                                            }`}
-                                        />
-                                        {errors.latitude && <p className="text-red-500 text-xs mt-1">{errors.latitude}</p>}
+                                </Field>
+                                <LocationAutocomplete
+                                    label="Localisation"
+                                    value={formData.location}
+                                    onChange={handleLocationChange}
+                                    placeholder="Ex: Bastos, Yaoundé ou Akwa, Douala"
+                                    required
+                                    error={errors.location}
+                                />
+                                {formData.location?.latitude && (
+                                    <div className="p-2.5 bg-green-50 border border-green-100 rounded-lg flex items-start gap-2">
+                                        <MapPin size={13} className="text-green-600 mt-0.5 flex-shrink-0" />
+                                        <div className="text-xs text-green-700">
+                                            <p className="font-medium">{formData.location.name}</p>
+                                            <p className="font-mono text-green-500 text-[11px]">
+                                                {formData.location.latitude.toFixed(6)}, {formData.location.longitude.toFixed(6)}
+                                            </p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Longitude *
-                                        </label>
-                                        <input
-                                            type="number"
-                                            step="any"
-                                            placeholder="ex: 11.5021"
-                                            value={formData.longitude}
-                                            onChange={(e) => handleInputChange('longitude', e.target.value)}
-                                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                                                errors.longitude ? 'border-red-300' : 'border-gray-200'
-                                            }`}
-                                        />
-                                        {errors.longitude && <p className="text-red-500 text-xs mt-1">{errors.longitude}</p>}
-                                    </div>
-                                </div>
+                                )}
                             </div>
 
-                            {/* Configuration de la station */}
-                            <div className="bg-gray-50 p-4 rounded-lg">
-                                <h3 className="font-semibold text-gray-700 mb-4">Configuration</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">Type de station *</label>
+                            {/* ── Station : Configuration ── */}
+                            <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+                                <Section title="Configuration" />
+                                <div className="grid grid-cols-2 gap-3">
+                                    <Field label="Type de station *">
                                         <select
                                             value={formData.stationType}
                                             onChange={(e) => handleInputChange('stationType', e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className={getInputCls(false)}
                                         >
-                                            <option value="STOP">Arrêt Normal</option>
+                                            <option value="STOP">Arrêt normal</option>
                                             <option value="TERMINUS">Terminus</option>
-                                            <option value="DEPARTURE">Depart</option>
+                                            <option value="DEPARTURE">Départ</option>
                                         </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">Statut *</label>
+                                    </Field>
+                                    <Field label="Statut *">
                                         <select
                                             value={formData.stationStatus}
                                             onChange={(e) => handleInputChange('stationStatus', e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className={getInputCls(false)}
                                         >
                                             <option value="ACTIVE">Actif</option>
                                             <option value="MAINTENANCE">Maintenance</option>
                                             <option value="INACTIVE">Inactif</option>
                                         </select>
-                                    </div>
+                                    </Field>
                                 </div>
                             </div>
                         </>
                     )}
 
-                    {/* Boutons d'action */}
-                    <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+                    {/* ── Actions ── */}
+                    <div className="flex justify-end gap-2.5 pt-1 border-t border-gray-100">
                         <button
-                            type="button"
-                            onClick={handleClose}
-                            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+                            type="button" onClick={handleClose}
+                            className="px-5 py-2 text-sm text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
                         >
                             Annuler
                         </button>
                         <button
                             type="submit"
-                            className="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                            className="flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors"
                         >
-                            <Save className="w-4 h-4 mr-2"/>
+                            <Save size={14} />
                             {modalMode === 'edit' ? 'Mettre à jour' : 'Enregistrer'}
                         </button>
                     </div>
@@ -418,4 +318,6 @@ export const ModalAjout = ({activeTab, showAddModal, setShowAddModal, modalMode 
             </div>
         </div>
     );
+
+    return createPortal(modal, document.body);
 };

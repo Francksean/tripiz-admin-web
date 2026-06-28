@@ -390,9 +390,9 @@ const BusStationsPage = () => {
                                     </>
                                 ) : (
                                     <>
-                                        <option>ACTIVE</option>
-                                        <option>MAINTENANCE</option>
-                                        <option>INACTIVE</option>
+                                        <option value="ACTIVE">Actif</option>
+                                        <option value="MAINTENANCE">En Maintenance</option>
+                                        <option value="INACTIVE">Inactif</option>
                                     </>
                                 )}
                             </select>
