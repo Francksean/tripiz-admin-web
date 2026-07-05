@@ -133,15 +133,34 @@ const TripizUserManagement = () => {
 
     const handleSaveUser = async (userData) => {
         try {
-            const response = await userService.signupAsDriver(userData);
-            if (response && response.data) {
-                setUsers([...users, response.data]);
-            }
+            // 1. On prépare les données (conversion si le backend attend du snake_case)
+            const payload = {
+                email: userData.email,
+                password: userData.password,
+                firstName: userData.firstName, // Laissez en camelCase selon votre Swagger, ou passez en first_name si nécessaire
+                lastName: userData.lastName,
+                phone: userData.phone
+            };
+
+            // 2. Appel API
+            const newDriver = await userService.signupAsDriver(payload);
+
+            // 3. Rechargement global des données de la liste depuis le serveur
             await loadData();
+
+            // 4. Si le rechargement n'inclut pas instantanément le chauffeur, on l'ajoute manuellement
+            if (newDriver) {
+                setUsers(prevUsers => {
+                    // Évite les doublons si loadData() l'a déjà récupéré
+                    const exists = prevUsers.some(u => u.email === newDriver.email);
+                    return exists ? prevUsers : [...prevUsers, newDriver];
+                });
+            }
+
             setModalOpen(false);
         } catch (error) {
             console.error('Erreur sauvegarde chauffeur:', error);
-            alert('Erreur lors de la création du chauffeur');
+            alert(`Erreur lors de la création du chauffeur : ${error.message}`);
         }
     };
 

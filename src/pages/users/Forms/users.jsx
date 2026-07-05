@@ -3,13 +3,20 @@ import { createPortal } from "react-dom";
 import { X, Save, User } from "lucide-react";
 
 export const UserModal = ({ isOpen, onClose, user, onSave }) => {
-    const [formData, setFormData] = useState({ email: '', password: '' });
+    const emptyForm = { email: '', password: '', firstName: '', lastName: '', phone: '' };
+    const [formData, setFormData] = useState(emptyForm);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
 
     useEffect(() => {
         if (isOpen) {
-            setFormData(user ? { email: user.email || '', password: '' } : { email: '', password: '' });
+            setFormData(user ? {
+                email: user.email || '',
+                password: '',
+                firstName: user.firstName || '',
+                lastName: user.lastName || '',
+                phone: user.phone || '',
+            } : emptyForm);
             setError('');
             setSubmitting(false);
         }
@@ -24,10 +31,20 @@ export const UserModal = ({ isOpen, onClose, user, onSave }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
         if (formData.password.length < 8) {
             setError('Le mot de passe doit contenir au moins 8 caractères');
             return;
         }
+        if (!formData.firstName.trim() || !formData.lastName.trim()) {
+            setError('Le prénom et le nom sont requis');
+            return;
+        }
+        if (!formData.phone.trim()) {
+            setError('Le numéro de téléphone est requis');
+            return;
+        }
+
         setSubmitting(true);
         try {
             await onSave(formData);
@@ -52,10 +69,10 @@ export const UserModal = ({ isOpen, onClose, user, onSave }) => {
             style={{ background: 'rgba(0,0,0,0.5)' }}
             onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
         >
-            <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl border border-gray-100">
+            <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl border border-gray-100 max-h-[90vh] overflow-y-auto">
 
                 {/* ── En-tête ── */}
-                <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+                <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white">
                     <div className="flex items-center gap-3">
                         <div className="w-9 h-9 bg-blue-50 border border-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
                             <User className="w-4 h-4 text-blue-600" />
@@ -90,6 +107,55 @@ export const UserModal = ({ isOpen, onClose, user, onSave }) => {
                     )}
 
                     <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+
+                        {/* Prénom / Nom */}
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-xs font-medium text-gray-500 mb-1.5">
+                                    Prénom *
+                                </label>
+                                <input
+                                    type="text"
+                                    value={formData.firstName}
+                                    onChange={(e) => handleChange('firstName', e.target.value)}
+                                    className={inputCls}
+                                    placeholder="Jean"
+                                    required
+                                    disabled={submitting}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-gray-500 mb-1.5">
+                                    Nom *
+                                </label>
+                                <input
+                                    type="text"
+                                    value={formData.lastName}
+                                    onChange={(e) => handleChange('lastName', e.target.value)}
+                                    className={inputCls}
+                                    placeholder="Mballa"
+                                    required
+                                    disabled={submitting}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Téléphone */}
+                        <div>
+                            <label className="block text-xs font-medium text-gray-500 mb-1.5">
+                                Téléphone *
+                            </label>
+                            <input
+                                type="tel"
+                                value={formData.phone}
+                                onChange={(e) => handleChange('phone', e.target.value)}
+                                className={inputCls}
+                                placeholder="+237 6XX XXX XXX"
+                                required
+                                disabled={submitting}
+                            />
+                        </div>
+
                         {/* Email */}
                         <div>
                             <label className="block text-xs font-medium text-gray-500 mb-1.5">

@@ -15,8 +15,8 @@ const ROLE_CFG = {
 };
 
 const getUserName = (u) =>
-    (u.first_name || u.last_name)
-        ? `${u.first_name || ''} ${u.last_name || ''}`.trim()
+    (u.firstName || u.lastName)
+        ? `${u.firstName || ''} ${u.lastName || ''}`.trim()
         : (u.name || '—');
 
 // ── Composant ─────────────────────────────────────────────────────────────────

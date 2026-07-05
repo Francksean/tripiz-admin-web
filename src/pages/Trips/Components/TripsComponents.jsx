@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import { Search, Filter, Eye, Edit, Trash2, Plus, Calendar, Clock, Users, MapPin, Bus, User } from 'lucide-react';
 import { TripDetailModal } from "./DetailsModal.jsx";
 import { EditTripModal }   from "./EditModal.jsx";
 import { CreateTripModal } from "./AddModal.jsx";
+import {busService} from "../../../Services/BusService.js";
+import {userService} from "../../../Services/UserService.js";
+import {itineraryService} from "../../../Services/ItineraireService.js";
+import {trajetService} from "../../../Services/TrajetService.js";
 
 const INITIAL_TRIPS = [
     { trip_id: 1, bus_number: 'BUS001', driver_name: 'Jean Mballa',  itinerary_name: 'Douala Central - Bonabéri', trip_date: '2024-12-15', schedule_departure_time: '07:30:00', actual_departure_time: '07:32:00', schedule_arrival_time: '08:15:00', actual_arrival_time: '08:18:00', trip_status: 'TERMINE',   passenger_count: 42, route_name: 'Ligne A' },
@@ -48,8 +52,8 @@ const TripsManagement = () => {
     const handleViewTrip   = (trip) => { setSelectedTrip(trip); setShowDetailModal(true); };
     const handleEditTrip   = (trip) => { setTripToEdit(trip);   setShowEditModal(true); };
     const handleDeleteTrip = (id)   => { if (window.confirm('Supprimer ce trajet ?')) setTrips(prev => prev.filter(t => t.trip_id !== id)); };
-    const handleSaveNew    = (trip) => setTrips(prev => [...prev, trip]);
     const handleSaveEdit   = (trip) => setTrips(prev => prev.map(t => t.trip_id === trip.trip_id ? trip : t));
+    const handleCreateTrip = async (tripData) => { await trajetService.createTrip(tripData);};
 
     const statsCards = [
         { label: 'Total Trajets',    value: trips.length,                                            color: 'bg-green-100 text-green-600',  Icon: Bus      },
@@ -64,6 +68,42 @@ const TripsManagement = () => {
             t.driver_name.toLowerCase().includes(searchTerm.toLowerCase())) &&
         (statusFilter === 'Tous les statuts' || t.trip_status === statusFilter)
     );
+
+    const [buses, setBuses] = useState([]);
+    const [drivers, setDrivers] = useState([]);
+    const [itineraries, setItineraries] = useState([]);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    useEffect(() => {
+        loadFormOptions();
+    }, []);
+
+    const loadFormOptions = async () => {
+        const [busList, driverList, itineraryList] = await Promise.all([
+            busService.getAllBuses(),
+            userService.getAllDrivers(),
+            itineraryService.getAllItineraries(),
+        ]);
+
+        // Bus : { busId, busNumber, matriculation, ... } → label lisible
+        setBuses(busList.map(b => ({
+            id: b.busId,
+            label: `Bus ${b.busNumber} — ${b.matriculation}`,
+        })));
+
+        // Itinéraire : { itinerary_id, itinerary_name, route_name, ... }
+        setItineraries(itineraryList.map(i => ({
+            id: i.itinerary_id,
+            label: `${i.itinerary_name} (${i.route_name})`,
+        })));
+
+        // Chauffeur : forme exacte à confirmer (voir remarque ci-dessous)
+        setDrivers(driverList.map(d => ({
+            id: d.userId ?? d.id ?? d.driver_id,
+            label: [d.firstName, d.lastName].filter(Boolean).join(' ') || d.email,
+        })));
+    };
+
 
     return (
         <div className="flex-1 overflow-y-auto">
@@ -231,11 +271,14 @@ const TripsManagement = () => {
                 onEdit={handleEditTrip}
             />
 
-            <CreateTripModal
-                isOpen={showCreateModal}
-                onClose={() => setShowCreateModal(false)}
-                onSave={handleSaveNew}
-            />
+                <CreateTripModal
+                    isOpen={showCreateModal} // ← ICI : On remplace isModalOpen par showCreateModal
+                    onClose={() => setShowCreateModal(false)} // ← ICI : On remet le bon setter à false
+                    onSave={handleCreateTrip}
+                    buses={buses}
+                    drivers={drivers}
+                    itineraries={itineraries}
+                />
 
             <EditTripModal
                 isOpen={showEditModal}

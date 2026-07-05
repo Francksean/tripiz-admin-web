@@ -22,7 +22,7 @@ export const userService = {
     // Inscription chauffeur
     signupAsDriver: async (userData) => {
         try {
-            return await api.request('/user/admin/auth/signupAsDriver', {
+            return await api.request('/auth/register/driver', {   // ← corrigé
                 method: 'POST',
                 body: JSON.stringify(userData),
             });
@@ -35,7 +35,32 @@ export const userService = {
     // Obtenir tous les utilisateurs
     getAllUsers: async () => {
         try {
-            const response = await api.request('/user/admin/getAllUsers', {
+            const response = await api.request('/user/admin/users', {
+                method: 'GET',
+            });
+
+            // Ensure we return an array
+            return Array.isArray(response) ? response :
+                (response && response.data && Array.isArray(response.data)) ? response.data :
+                    [];
+        } catch (error) {
+            console.error('Erreur récupération utilisateurs:', error);
+
+            // Si l'endpoint n'existe pas (404), retourner un tableau vide
+            if (error.message.includes('Not Found') || error.message.includes('404')) {
+                console.warn('Endpoint /users non trouvé, retour d\'un tableau vide');
+                return [];
+            }
+
+            // Pour les autres erreurs, les propager
+            throw new Error(`Impossible de récupérer les utilisateurs: ${error.message}`);
+        }
+    },
+
+    // Obtenir tous les utilisateurs
+    getAllDrivers: async () => {
+        try {
+            const response = await api.request('/user/admin/drivers', {
                 method: 'GET',
             });
 
@@ -121,7 +146,7 @@ export const userService = {
 
     countUsersCreatedThisMonth: async () => {
         try {
-            const response = await api.request('/user/admin/countUsersCreatedThisMonth', {
+            const response = await api.request('/user/admin/countCreatedThisMonth', {
                 method: 'GET',
             });
             return response && typeof response.count !== 'undefined' ? response : { count: 0 };

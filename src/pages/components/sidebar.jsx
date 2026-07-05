@@ -3,6 +3,7 @@ import {
     Bus, Users, BarChart3, LogOut, Home, Route,
     CreditCard, User, Map, ChevronLeft, ChevronRight
 } from 'lucide-react';
+import connectionService from "../../Services/Connexion.js";
 
 export const TripizSidebar = ({ isCollapsed, onToggleCollapse, isMobile, onMobileClose }) => {
     const navigate = useNavigate();
@@ -13,16 +14,25 @@ export const TripizSidebar = ({ isCollapsed, onToggleCollapse, isMobile, onMobil
         if (isMobile) onMobileClose?.();
     };
 
+    // ── Fonction de déconnexion ──
+    const handleLogout = () => {
+        if (window.confirm("Êtes-vous sûr de vouloir vous déconnecter ?")) {
+            connectionService.logout(); // Supprime les tokens du localStorage
+            navigate("/"); // Redirige vers la page d'accueil / connexion
+            if (isMobile) onMobileClose?.();
+        }
+    };
+
     const currentPath = location.pathname.slice(1) || 'dashboard';
 
     const menuItems = [
         { id: 'dashboard', icon: Home,       label: 'Tableau de bord' },
         { id: 'users',     icon: Users,      label: 'Utilisateurs' },
         { id: 'routes',    icon: Route,      label: 'Itinéraires' },
-        { id: 'trips',     icon: Map,        label: 'Trajets' },
+        //{ id: 'trips',     icon: Map,        label: 'Trajets' },
         { id: 'buses',     icon: Bus,        label: 'Bus' },
-        { id: 'tickets',   icon: CreditCard, label: 'Billets' },
-        { id: 'stats',     icon: BarChart3,  label: 'Statistiques' },
+        // { id: 'tickets',   icon: CreditCard, label: 'Billets' },
+        // { id: 'stats',     icon: BarChart3,  label: 'Statistiques' },
     ];
 
     const collapsed = isCollapsed && !isMobile;
@@ -112,12 +122,10 @@ export const TripizSidebar = ({ isCollapsed, onToggleCollapse, isMobile, onMobil
                                     )}
                                 </button>
 
-                                {/* Barre indicateur gauche en mode réduit */}
                                 {isActive && collapsed && (
                                     <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-blue-600 rounded-r-full" />
                                 )}
 
-                                {/* Tooltip en mode réduit */}
                                 {collapsed && (
                                     <div className="
                                         pointer-events-none
@@ -145,8 +153,7 @@ export const TripizSidebar = ({ isCollapsed, onToggleCollapse, isMobile, onMobil
                                 <User className="w-3.5 h-3.5 text-white" />
                             </div>
                             <div className="min-w-0">
-                                <p className="text-xs font-medium text-gray-800 truncate leading-tight">Admin SOCATUR</p>
-                                <p className="text-[11px] text-gray-400 truncate leading-tight">admin@socatur.cm</p>
+                                <p className="text-xs font-medium text-gray-800 truncate leading-tight">Administrateur</p>
                             </div>
                         </div>
                     ) : (
@@ -160,8 +167,7 @@ export const TripizSidebar = ({ isCollapsed, onToggleCollapse, isMobile, onMobil
                                 bg-gray-900 text-white text-xs rounded-lg px-2.5 py-2 whitespace-nowrap shadow-lg
                                 opacity-0 group-hover:opacity-100 transition-opacity duration-150
                             ">
-                                <p className="font-medium">Admin SOCATUR</p>
-                                <p className="text-gray-400 text-[11px]">admin@socatur.cm</p>
+                                <p className="font-medium">Administrateur</p>
                                 <span className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900" />
                             </div>
                         </div>
@@ -169,11 +175,14 @@ export const TripizSidebar = ({ isCollapsed, onToggleCollapse, isMobile, onMobil
 
                     {/* Déconnexion */}
                     <div className="relative group">
-                        <button className={`
-                            w-full flex items-center rounded-lg transition-all duration-150
-                            text-gray-400 hover:bg-red-50 hover:text-red-600
-                            ${collapsed ? 'justify-center w-10 h-10 mx-auto' : 'gap-3 px-3 py-2.5'}
-                        `}>
+                        <button
+                            onClick={handleLogout} // ← Branchement de la fonction au clic
+                            className={`
+                                w-full flex items-center rounded-lg transition-all duration-150
+                                text-gray-400 hover:bg-red-50 hover:text-red-600
+                                ${collapsed ? 'justify-center w-10 h-10 mx-auto' : 'gap-3 px-3 py-2.5'}
+                            `}
+                        >
                             <LogOut className={`flex-shrink-0 ${collapsed ? 'w-5 h-5 xl:w-6 xl:h-6' : 'w-4 h-4 xl:w-[18px] xl:h-[18px]'}`} />
                             {!collapsed && (
                                 <span className="text-xs xl:text-sm font-medium">Déconnexion</span>

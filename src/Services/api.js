@@ -1,79 +1,64 @@
 // Configuration API
-// const API_BASE_URL = 'https://tripiz-api-production.up.railway.app';
-const API_BASE_URL = 'http://localhost:8080';
+import {connectionService} from "./Connexion.js";
+
+const API_BASE_URL = 'https://tripiz-api-production-d0f2.up.railway.app';
+//const API_BASE_URL = 'http://localhost:8080';
 
 const api = {
     async request(endpoint, options = {}) {
         const url = `${API_BASE_URL}${endpoint}`;
+
         const config = {
+            method: options.method || 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                ...options.headers,
+                ...(connectionService.getToken() && !endpoint.includes('/auth/login') && {
+                    'Authorization': `Bearer ${connectionService.getToken()}`
+                }),
             },
             mode: 'cors',
-            ...options,
+            body: options.body,
         };
 
-        console.log(`Making ${config.method || 'GET'} request to:`, url);
+        let response = await fetch(url, config);
 
-        try {
-            const response = await fetch(url, config);
-
-            console.log(`Response status: ${response.status} ${response.statusText}`);
-
-            if (!response.ok) {
-                let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-                try {
-                    const errorData = await response.json();
-                    errorMessage = errorData.message || errorData.error || errorMessage;
-                } catch (e) {
-                    // If response is not JSON, use status text
-                }
-                throw new Error(errorMessage);
-            }
-
-            // Check if response has content
-            const contentType = response.headers.get('content-type');
-            if (contentType && contentType.includes('application/json')) {
-                return await response.json();
+        // Si 401 et qu'on n'est pas déjà en train de login/refresh, tente un refresh du token
+        if (response.status === 401 && !endpoint.includes('/auth/')) {
+            const refreshed = await connectionService.refreshAccessToken();
+            if (refreshed) {
+                // Rejoue la requête originale avec le nouveau token
+                config.headers['Authorization'] = `Bearer ${connectionService.getToken()}`;
+                response = await fetch(url, config);
             } else {
-                const text = await response.text();
-                return text ? { message: text } : {};
-            }
-
-        } catch (error) {
-            console.error('API Error Details:', {
-                url,
-                method: config.method || 'GET',
-                error: error.message,
-                type: error.name
-            });
-
-            // Provide more specific error messages
-            if (error.name === 'TypeError' && error.message.includes('fetch')) {
-                throw new Error('Impossible de se connecter au serveur. Vérifiez votre connexion internet.');
-            } else if (error.message.includes('CORS')) {
-                throw new Error('Erreur de politique CORS. Le serveur doit autoriser les requêtes depuis votre domaine.');
-            } else {
-                throw error;
+                // Refresh impossible → déconnexion propre
+                connectionService.logout();
+                window.location.href = '/'; // retour à la page de login
+                throw new Error('Session expirée, veuillez vous reconnecter.');
             }
         }
+
+        if (!response.ok) {
+            let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.message || errorData.error || errorMessage;
+            } catch (e) {}
+            throw new Error(errorMessage);
+        }
+
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            return await response.json();
+        }
+        const text = await response.text();
+        return text ? { message: text } : {};
     },
 
-    // Helper method to test API connectivity
     async testConnection() {
         try {
-            const response = await fetch(`${API_BASE_URL}/health`, {
-                method: 'GET',
-                mode: 'cors',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            });
+            const response = await fetch(`${API_BASE_URL}/health`, { method: 'GET', mode: 'cors' });
             return response.ok;
         } catch (error) {
-            console.error('Connection test failed:', error);
             return false;
         }
     }
