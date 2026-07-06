@@ -2,6 +2,7 @@ import {useEffect, useState} from "react";
 import TripizSidebar from "../components/sidebar.jsx";
 import TripsManagement from "./Components/TripsComponents.jsx";
 
+
 const TripizTrips = () => {
     const [activeItem, setActiveItem] = useState('users');
 

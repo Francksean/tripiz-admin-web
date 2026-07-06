@@ -1,64 +1,17 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Bus, Lock, Mail, Shield, BarChart3, Users, Settings, ArrowRight, AlertCircle } from 'lucide-react';
-import { connectionService } from "../../Services/Connexion.js";
-
-
-const TRANSLATIONS = {
-    fr: {
-        subtitle:       'Gestion des Transports Urbains',
-        tagline:        'Connectez-vous pour gérer la plateforme',
-        email:          'Adresse e-mail',
-        password:       'Mot de passe',
-        loginButton:    'Se connecter',
-        forgotPassword: 'Mot de passe oublié ?',
-        features: {
-            stats:   'Statistiques en temps réel',
-            users:   'Gestion des utilisateurs',
-            routes:  'Gestion des itinéraires',
-            tickets: 'Suivi des ventes',
-        },
-        security:    'Connexion sécurisée',
-        loading:     'Connexion…',
-        description: "Gérez efficacement la flotte de bus et optimisez l'expérience des passagers au quotidien.",
-    },
-    en: {
-        subtitle:       'Urban Transport Management',
-        tagline:        'Sign in to manage the platform',
-        email:          'Email address',
-        password:       'Password',
-        loginButton:    'Sign in',
-        forgotPassword: 'Forgot password?',
-        features: {
-            stats:   'Real-time statistics',
-            users:   'User management',
-            routes:  'Route management',
-            tickets: 'Sales tracking',
-        },
-        security:    'Secure connection',
-        loading:     'Signing in…',
-        description: 'Efficiently manage your bus fleet and optimize the daily passenger experience.',
-    },
-};
-
-const FEATURES = [
-    { icon: BarChart3, key: 'stats',   desc: 'Métriques'    },
-    { icon: Users,     key: 'users',   desc: 'Utilisateurs' },
-    { icon: Bus,       key: 'routes',  desc: 'Itinéraires'  },
-    { icon: Settings,  key: 'tickets', desc: 'Ventes'       },
-];
+import { Bus, Lock, Mail, AlertCircle } from 'lucide-react';
+import connectionService from "../../Services/Connexion.js";
 
 
 const TripizAdminLogin = () => {
     const navigate = useNavigate();
 
     const [showPassword, setShowPassword] = useState(false);
+    const [rememberMe, setRememberMe]     = useState(true);
     const [formData, setFormData]         = useState({ email: '', password: '' });
-    const [language, setLanguage]         = useState('fr');
     const [isLoading, setIsLoading]       = useState(false);
     const [error, setError]               = useState('');
-
-    const t = TRANSLATIONS[language];
 
     const handleInputChange = (e) => {
         setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -82,7 +35,7 @@ const TripizAdminLogin = () => {
         try {
             console.log('Payload envoyé:', { username: email, password }); // à retirer après debug
             await connectionService.login({ username: email, password });
-            navigate('/dashboard');
+            navigate('/users');
         } catch (err) {
             setError(err.message || 'Identifiants incorrects. Réessayez.');
         } finally {
@@ -98,129 +51,101 @@ const TripizAdminLogin = () => {
     return (
         <div
             className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
-            style={{ background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 70%, #1a4a7a 100%)' }}
+            style={{ background: '#F0F6F6' }}
         >
-            {/* Orbes flottants */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full opacity-20"
-                     style={{ background: 'radial-gradient(circle, #3A6CC4, transparent 70%)', animation: 'pulse 8s ease-in-out infinite' }} />
-                <div className="absolute -bottom-32 -left-32 w-80 h-80 rounded-full opacity-15"
-                     style={{ background: 'radial-gradient(circle, #498ED2, transparent 70%)', animation: 'pulse 10s ease-in-out infinite 2s' }} />
-                <div className="absolute top-1/3 left-1/4 w-64 h-64 rounded-full opacity-10"
-                     style={{ background: 'radial-gradient(circle, #3A6CC4, transparent 70%)', animation: 'pulse 12s ease-in-out infinite 1s' }} />
-            </div>
-
-            {/* Sélecteur de langue */}
-            <div className="absolute top-5 right-5 z-20 flex rounded-full border border-white/20 overflow-hidden backdrop-blur-md"
-                 style={{ background: 'rgba(255,255,255,0.08)' }}>
-                {['fr', 'en'].map(lang => (
-                    <button
-                        key={lang}
-                        onClick={() => setLanguage(lang)}
-                        className="px-3 py-1.5 text-sm font-medium transition-all duration-200"
-                        style={{
-                            background: language === lang ? 'rgba(58,108,196,0.7)' : 'transparent',
-                            color: language === lang ? '#fff' : 'rgba(255,255,255,0.6)',
-                        }}
-                    >
-                        {lang.toUpperCase()}
-                    </button>
-                ))}
-            </div>
+            <style>{`
+                @keyframes cardIn {
+                    from { opacity: 0; transform: translateY(14px) scale(0.99); }
+                    to   { opacity: 1; transform: translateY(0) scale(1); }
+                }
+                .tripiz-card { animation: cardIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) both; }
+                @media (prefers-reduced-motion: reduce) {
+                    .tripiz-card { animation: none; }
+                }
+                .tripiz-input:focus { border-color: #3A68C4 !important; box-shadow: 0 0 0 4px rgba(58,104,196,0.14) !important; background: #fff !important; }
+                .tripiz-submit:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 14px 28px rgba(58,104,196,0.4) !important; }
+                .tripiz-submit:active:not(:disabled) { transform: translateY(0); }
+                .tripiz-link { color: #3A68C4; }
+                .tripiz-link:hover { color: #2C2C2C; }
+                .tripiz-checkbox { accent-color: #3A68C4; }
+            `}</style>
 
             {/* Carte principale */}
             <div
-                className="w-full max-w-3xl relative z-10 rounded-2xl overflow-hidden flex flex-col lg:flex-row"
-                style={{
-                    boxShadow: '0 24px 60px rgba(0,0,0,0.45), 0 0 0 0.5px rgba(255,255,255,0.08)',
-                    minHeight: '480px',
-                }}
+                className="tripiz-card w-full max-w-4xl relative z-10 rounded-[28px] overflow-hidden flex flex-col lg:flex-row bg-white"
+                style={{ boxShadow: '0 40px 90px rgba(15,25,55,0.18)', minHeight: '520px' }}
             >
-                {/* Panneau gauche — marque */}
+                {/* Panneau gauche — identité visuelle, bord arrondi qui mord sur le panneau blanc */}
                 <div
-                    className="lg:w-3/5 p-5 lg:p-8 flex flex-col justify-between relative"
-                    style={{ background: 'linear-gradient(145deg, #1e3a6e 0%, #2a5298 50%, #3A6CC4 100%)' }}
+                    className="lg:w-1/2 p-10 lg:p-12 flex flex-col justify-between relative overflow-hidden"
+                    style={{
+                        background: 'linear-gradient(160deg, #3A68C4 0%, #498BD2 100%)',
+                        borderRadius: '28px',
+                        margin: '10px',
+                    }}
                 >
-                    <div className="absolute inset-0 opacity-5" style={{
-                        backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
-                        backgroundSize: '32px 32px',
+                    {/* Grain subtil */}
+                    <div className="absolute inset-0 opacity-[0.05]" style={{
+                        backgroundImage: 'radial-gradient(circle at 1.5px 1.5px, white 1px, transparent 0)',
+                        backgroundSize: '26px 26px',
                     }} />
 
+                    {/* Cercles décoratifs, coupés par le bord inférieur du panneau (signature visuelle) */}
+                    <div className="absolute rounded-full pointer-events-none"
+                         style={{ width: '19rem', height: '19rem', background: '#2C2C2C', opacity: 0.25, left: '-70px', bottom: '-140px' }} />
+                    <div className="absolute rounded-full pointer-events-none"
+                         style={{ width: '13rem', height: '13rem', background: '#EFF0EB', opacity: 0.5, left: '30px', bottom: '-90px' }} />
+                    <div className="absolute rounded-full pointer-events-none"
+                         style={{ width: '6rem', height: '6rem', background: '#EFF0EB', opacity: 0.18, right: '18%', top: '-20px' }} />
+
                     <div className="relative z-10">
-                        {/* Logo */}
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-                                 style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', border: '0.5px solid rgba(255,255,255,0.25)' }}>
+                        <div className="flex items-center gap-3 mb-14">
+                            <div className="w-11 h-11 rounded-xl flex items-center justify-center"
+                                 style={{ background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(8px)', border: '0.5px solid rgba(255,255,255,0.3)' }}>
                                 <Bus className="w-5 h-5 text-white" />
                             </div>
                             <div>
-                                <h1 className="text-xl font-bold text-white tracking-wide">TRIPIZ</h1>
-                                <p className="text-xs text-white/60">{t.subtitle}</p>
+                                <h1 className="text-xl font-bold text-white tracking-[0.15em] leading-none">TRIPIZ</h1>
+                                <p className="text-xs text-white/70 mt-1">Gestion des transports urbains</p>
                             </div>
                         </div>
 
-                        {/* Titre + description */}
-                        <div className="mb-5">
-                            <h2 className="text-xl lg:text-2xl font-light text-white mb-2 leading-tight">
-                                Panneau<br />d'administration
-                            </h2>
-                            <p className="text-sm text-white/70 leading-relaxed max-w-sm">{t.description}</p>
-                        </div>
-
-                        {/* Fonctionnalités */}
-                        <div className="grid grid-cols-2 gap-3">
-                            {FEATURES.map(({ icon: Icon, key, desc }) => (
-                                <div
-                                    key={key}
-                                    className="rounded-xl p-3 flex items-start gap-2.5 group transition-all duration-200"
-                                    style={{ background: 'rgba(255,255,255,0.07)', border: '0.5px solid rgba(255,255,255,0.12)' }}
-                                >
-                                    <Icon className="w-4 h-4 text-white/80 mt-0.5 flex-shrink-0 group-hover:text-white transition-colors" />
-                                    <div>
-                                        <p className="text-xs font-medium text-white leading-tight">{t.features[key]}</p>
-                                        <p className="text-xs text-white/50 mt-0.5">{desc}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                        <p className="text-xs font-semibold tracking-[0.2em] text-white/70 mb-3">BIENVENUE</p>
+                        <h2 className="text-3xl font-bold text-white mb-4 leading-tight">
+                            Le tableau de bord<br />de votre réseau
+                        </h2>
+                        <p className="text-sm text-white/75 leading-relaxed max-w-xs">
+                            Suivez vos lignes, vos véhicules et vos ventes depuis un seul endroit.
+                        </p>
                     </div>
 
-                    {/* Badge de sécurité */}
-                    <div className="relative z-10 flex items-center gap-2 mt-6" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                        <Shield className="w-4 h-4" />
-                        <span className="text-xs">{t.security}</span>
-                    </div>
+                    <div className="relative z-10" />
                 </div>
 
                 {/* Panneau droit — formulaire */}
-                <div className="lg:w-2/5 p-5 lg:p-7 flex flex-col justify-center" style={{ background: '#f8f9fb' }}>
-                    <div className="max-w-xs mx-auto w-full">
+                <div className="lg:w-1/2 p-9 lg:p-12 flex flex-col justify-center bg-white">
+                    <div className="w-full max-w-sm mx-auto">
 
-                        {/* En-tête */}
-                        <div className="mb-5">
-                            <div className="w-9 h-9 rounded-xl mb-3 flex items-center justify-center"
-                                 style={{ background: 'linear-gradient(135deg, #e8effe, #d4e4fd)' }}>
-                                <Lock className="w-4 h-4" style={{ color: '#3A6CC4' }} />
-                            </div>
-                            <h3 className="text-base font-semibold text-gray-900">Connexion admin</h3>
-                            <p className="text-xs text-gray-500 mt-1">{t.tagline}</p>
-                        </div>
+                        <h3 className="text-2xl font-bold mb-1.5" style={{ color: '#2C2C2C' }}>Connexion</h3>
+                        {/*<p className="text-sm mb-7" style={{ color: 'rgba(44,44,44,0.55)' }}>*/}
+                        {/*    Accédez à votre espace administrateur.*/}
+                        {/*</p>*/}
 
                         {/* Erreur */}
                         {error && (
-                            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
-                                <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
-                                <p className="text-xs text-red-700">{error}</p>
+                            <div className="mb-4 p-3 rounded-lg flex items-start gap-2" style={{ background: '#fdeceb', border: '1px solid #f3c9c6' }}>
+                                <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#c2453c' }} />
+                                <p className="text-xs" style={{ color: '#8f3129' }}>{error}</p>
                             </div>
                         )}
 
                         {/* Champs */}
-                        <div className="space-y-3">
+                        <div className="space-y-4">
                             {/* Email */}
                             <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1.5">{t.email}</label>
+                                <label className="block text-xs font-medium mb-1.5" style={{ color: 'rgba(44,44,44,0.6)' }}>Adresse e-mail</label>
                                 <div className="relative">
-                                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'rgba(44,44,44,0.35)' }} />
                                     <input
                                         type="email"
                                         name="email"
@@ -229,18 +154,27 @@ const TripizAdminLogin = () => {
                                         onKeyDown={handleKeyDown}
                                         placeholder="admin@tripiz.cm"
                                         disabled={isLoading}
-                                        className="w-full pl-9 pr-4 py-2.5 rounded-lg text-sm text-gray-800 border border-gray-200 bg-white focus:outline-none transition-all disabled:opacity-50"
-                                        onFocus={(e) => { e.target.style.borderColor = '#3A6CC4'; e.target.style.boxShadow = '0 0 0 3px rgba(58,108,196,0.15)'; }}
-                                        onBlur={(e)  => { e.target.style.borderColor = '#e5e7eb'; e.target.style.boxShadow = 'none'; }}
+                                        className="tripiz-input w-full pl-9 pr-4 py-3 rounded-xl text-sm focus:outline-none transition-all duration-200 disabled:opacity-50"
+                                        style={{ color: '#2C2C2C', background: '#F0F6F6', border: '1px solid #e6ecec' }}
                                     />
                                 </div>
                             </div>
 
                             {/* Mot de passe */}
                             <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1.5">{t.password}</label>
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <label className="block text-xs font-medium" style={{ color: 'rgba(44,44,44,0.6)' }}>Mot de passe</label>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(p => !p)}
+                                        className="tripiz-link text-xs font-semibold tracking-wide transition-colors"
+                                        tabIndex={-1}
+                                    >
+                                        {showPassword ? 'MASQUER' : 'AFFICHER'}
+                                    </button>
+                                </div>
                                 <div className="relative">
-                                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'rgba(44,44,44,0.35)' }} />
                                     <input
                                         type={showPassword ? 'text' : 'password'}
                                         name="password"
@@ -249,52 +183,30 @@ const TripizAdminLogin = () => {
                                         onKeyDown={handleKeyDown}
                                         placeholder="••••••••••"
                                         disabled={isLoading}
-                                        className="w-full pl-9 pr-10 py-2.5 rounded-lg text-sm text-gray-800 border border-gray-200 bg-white focus:outline-none transition-all disabled:opacity-50"
-                                        onFocus={(e) => { e.target.style.borderColor = '#3A6CC4'; e.target.style.boxShadow = '0 0 0 3px rgba(58,108,196,0.15)'; }}
-                                        onBlur={(e)  => { e.target.style.borderColor = '#e5e7eb'; e.target.style.boxShadow = 'none'; }}
+                                        className="tripiz-input w-full pl-9 pr-4 py-3 rounded-xl text-sm focus:outline-none transition-all duration-200 disabled:opacity-50"
+                                        style={{ color: '#2C2C2C', background: '#F0F6F6', border: '1px solid #e6ecec' }}
                                     />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowPassword(p => !p)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                                        tabIndex={-1}
-                                    >
-                                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                    </button>
                                 </div>
                             </div>
 
-                            {/* Mot de passe oublié */}
-                            <div className="flex justify-end">
-                                <button type="button" className="text-xs font-medium hover:underline" style={{ color: '#3A6CC4' }}>
-                                    {t.forgotPassword}
-                                </button>
-                            </div>
 
                             {/* Bouton connexion */}
                             <button
                                 onClick={handleSubmit}
                                 disabled={isLoading}
-                                className="w-full py-2.5 px-5 rounded-lg text-sm font-semibold text-white flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
-                                style={{ background: isLoading ? '#9ca3af' : 'linear-gradient(90deg, #2a5298, #3A6CC4)' }}
+                                className="tripiz-submit w-full py-3 px-5 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed mt-2"
+                                style={{ background: isLoading ? '#9ca3af' : 'linear-gradient(90deg, #3A68C4, #498BD2)', boxShadow: isLoading ? 'none' : '0 10px 24px rgba(58,104,196,0.35)' }}
                             >
                                 {isLoading ? (
                                     <>
                                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                        {t.loading}
+                                        Connexion…
                                     </>
                                 ) : (
-                                    <>
-                                        {t.loginButton}
-                                        <ArrowRight className="w-4 h-4" />
-                                    </>
+                                    'Se connecter'
                                 )}
                             </button>
                         </div>
-
-                        <p className="text-center text-xs text-gray-400 mt-5">
-                            © 2024 TRIPIZ — Plateforme sécurisée
-                        </p>
                     </div>
                 </div>
             </div>

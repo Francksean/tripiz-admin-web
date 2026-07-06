@@ -83,13 +83,7 @@ const TicketsPage = () => {
                         <h1 className="text-xl lg:text-2xl font-bold text-gray-800">Gestion des Tickets</h1>
                         <p className="text-gray-500 mt-1 text-sm">Gérez tous les tickets achetés par les utilisateurs</p>
                     </div>
-                    <button
-                        onClick={() => setShowAddModal(true)}
-                        className="flex items-center px-4 sm:px-5 py-3 text-sm bg-gradient-to-r from-blue-600 to-blue-700
-                            text-white font-medium rounded-xl hover:scale-105 transition-all shadow-lg hover:shadow-xl w-fit"
-                    >
-                        <Plus className="w-4 h-4 mr-2" /> Nouveau Ticket
-                    </button>
+
                 </div>
 
                 {/* Stats */}
@@ -157,7 +151,7 @@ const TicketsPage = () => {
                                     </td>
                                     <td className="py-2.5 px-3">
                                         <p className="text-xs font-medium text-gray-800">{ticket.user_name}</p>
-                                        <p className="text-xs text-gray-400 mt-0.5">User #{ticket.user_id}</p>
+                                        {/*<p className="text-xs text-gray-400 mt-0.5">User #{ticket.user_id}</p>*/}
                                     </td>
                                     <td className="py-2.5 px-3">
                                         <p className="text-xs font-medium text-gray-800 mb-1">{ticket.route_name}</p>
@@ -198,10 +192,7 @@ const TicketsPage = () => {
                                     </td>
                                     <td className="py-2.5 px-3">
                                         <div className="flex items-center gap-1">
-                                            <button onClick={() => openQR(ticket)}     className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded transition-colors" title="QR Code"><QrCode size={13} /></button>
                                             <button onClick={() => openDetail(ticket)} className="p-1.5 text-blue-600  hover:bg-blue-50   rounded transition-colors" title="Détails"><Eye     size={13} /></button>
-                                            <button onClick={() => openEdit(ticket)}   className="p-1.5 text-gray-600  hover:bg-gray-50   rounded transition-colors" title="Modifier"><Edit    size={13} /></button>
-                                            <button onClick={() => handleDelete(ticket.ticket_id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors" title="Supprimer"><Trash2 size={13} /></button>
                                         </div>
                                     </td>
                                 </tr>

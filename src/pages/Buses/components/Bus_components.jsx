@@ -144,10 +144,6 @@ const BusStationsPage = () => {
     const handleSave = async (data, mode) => {
         try {
             setLoading(true);
-            console.log('=== DEBUG HANDLE SAVE ===');
-            console.log('Data reçue:', data);
-            console.log('Mode:', mode);
-            console.log('Active tab:', activeTab);
 
             if (activeTab === 'bus') {
                 if (mode === 'edit') {

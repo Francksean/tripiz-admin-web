@@ -10,7 +10,7 @@ const ItineraireEditModal = ({ itineraire, isOpen, onClose, onSave, stations = [
         arrival_station: '',
         distance: '',
         estimated_duration: '',
-        status: 'ACTIVE',
+        status: 'EN_COURS',
     });
 
     const [isLoading, setIsLoading] = useState(false);

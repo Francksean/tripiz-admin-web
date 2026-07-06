@@ -235,15 +235,15 @@ const TripizUserManagement = () => {
                                         className={selectCls}>
                                     <option value="all">Tous les rôles</option>
                                     <option value="admin">Administrateur</option>
-                                    <option value="Driver">Chauffeur</option>
+                                    <option value="driver">Chauffeur</option>
                                     <option value="client">Client</option>
                                 </select>
                                 <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
                                         className={selectCls}>
                                     <option value="all">Tous les statuts</option>
-                                    <option value="online">En ligne</option>
-                                    <option value="offline">Déconnecté</option>
-                                    <option value="blocked">Bloqué</option>
+                                    <option value="ONLINE">En ligne</option>
+                                    <option value="OFFLINE">Déconnecté</option>
+                                    <option value="BLOCKED">Bloqué</option>
                                 </select>
                             </div>
                         </div>

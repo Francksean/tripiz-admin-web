@@ -26,12 +26,12 @@ export const TripizSidebar = ({ isCollapsed, onToggleCollapse, isMobile, onMobil
     const currentPath = location.pathname.slice(1) || 'dashboard';
 
     const menuItems = [
-        { id: 'dashboard', icon: Home,       label: 'Tableau de bord' },
+        //{ id: 'dashboard', icon: Home,       label: 'Tableau de bord' },
         { id: 'users',     icon: Users,      label: 'Utilisateurs' },
-        { id: 'routes',    icon: Route,      label: 'Itinéraires' },
-        //{ id: 'trips',     icon: Map,        label: 'Trajets' },
         { id: 'buses',     icon: Bus,        label: 'Bus' },
-        // { id: 'tickets',   icon: CreditCard, label: 'Billets' },
+        { id: 'routes',    icon: Route,      label: 'Itinéraires' },
+        { id: 'trips',     icon: Map,        label: 'Trajets' },
+        { id: 'tickets',   icon: CreditCard, label: 'Billets' },
         // { id: 'stats',     icon: BarChart3,  label: 'Statistiques' },
     ];
 

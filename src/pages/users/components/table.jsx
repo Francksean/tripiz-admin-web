@@ -2,9 +2,9 @@ import { Mail, Phone, User, Users, UserX, UserCheck, Trash2 } from "lucide-react
 
 // ── Helpers hors composant ────────────────────────────────────────────────────
 const STATUS_CFG = {
-    online:  { cls: 'bg-green-50 text-green-700',  label: 'En ligne'    },
-    offline: { cls: 'bg-amber-50 text-amber-700',  label: 'Hors ligne'  },
-    blocked: { cls: 'bg-red-50 text-red-700',      label: 'Bloqué'      },
+    ONLINE:  { cls: 'bg-green-50 text-green-700',  label: 'En ligne'    },
+    OFFLINE: { cls: 'bg-amber-50 text-amber-700',  label: 'Hors ligne'  },
+    BLOCKED: { cls: 'bg-red-50 text-red-700',      label: 'Bloqué'      },
 };
 
 const ROLE_CFG = {

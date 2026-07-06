@@ -8,7 +8,7 @@ const EMPTY_FORM = {
     itinerary_id: '',
     trip_date: '',
     schedule_departure: '',
-    schedule_arrival: '',
+    actual_departure: "08:05:00",
     trip_status: 'PROGRAMME',
     passenger_count: 0
 };
@@ -66,12 +66,7 @@ export const CreateTripModal = ({ isOpen, onClose, onSave, buses = [], drivers =
         if (!formData.itinerary_id)       e.itinerary_id = 'Requis';
         if (!formData.trip_date)          e.trip_date = 'Requise';
         if (!formData.schedule_departure) e.schedule_departure = 'Requise';
-        if (!formData.schedule_arrival)   e.schedule_arrival = 'Requise';
 
-        if (formData.schedule_departure && formData.schedule_arrival &&
-            formData.schedule_departure >= formData.schedule_arrival) {
-            e.schedule_arrival = "L'arrivée doit être après le départ";
-        }
         setErrors(e);
         return Object.keys(e).length === 0;
     };
@@ -85,10 +80,9 @@ export const CreateTripModal = ({ isOpen, onClose, onSave, buses = [], drivers =
             const payload = {
                 ...formData,
                 schedule_departure: formData.schedule_departure.length === 5 ? `${formData.schedule_departure}:00` : formData.schedule_departure,
-                schedule_arrival: formData.schedule_arrival.length === 5 ? `${formData.schedule_arrival}:00` : formData.schedule_arrival,
-                actual_departure: "08:05:00", // Valeur par défaut requise ou optionnelle selon votre logique
                 passenger_count: Number(formData.passenger_count) || 0
             };
+            console.log('Payload envoyé:', payload);
 
             await onSave(payload);
             onClose();
@@ -213,14 +207,6 @@ export const CreateTripModal = ({ isOpen, onClose, onSave, buses = [], drivers =
                                     value={formData.schedule_departure}
                                     onChange={(e) => handleChange('schedule_departure', e.target.value)}
                                     className={getInputCls(!!errors.schedule_departure)}
-                                />
-                            </Field>
-                            <Field label="Arrivée prévue *" icon={Clock} error={errors.schedule_arrival}>
-                                <input
-                                    type="time"
-                                    value={formData.schedule_arrival}
-                                    onChange={(e) => handleChange('schedule_arrival', e.target.value)}
-                                    className={getInputCls(!!errors.schedule_arrival)}
                                 />
                             </Field>
                         </div>

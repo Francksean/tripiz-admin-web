@@ -1,6 +1,6 @@
 import api from "./api.js";
 
-export const connectionService = {
+const connectionService = {
     testConnection: () => api.testConnection(),
 
     login: async (connectionData) => {
