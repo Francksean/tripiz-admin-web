@@ -1,1 +1,0 @@
-# tripiz-admin-web
