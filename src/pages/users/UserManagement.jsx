@@ -6,6 +6,32 @@ import {UserTable} from "./components/table.jsx";
 import {UserModal} from "./Forms/users.jsx";
 import {userService} from "../../Services/UserService.js";
 
+// Lignes squelette affichées pendant le chargement, dans le même style que TicketsPage / BusStationsPage
+const UserTableSkeleton = () => (
+    <div className="overflow-x-auto">
+        <table className="w-full">
+            <thead className="bg-gray-50 border-b border-gray-200">
+            <tr>
+                {['Utilisateur', 'Email', 'Rôle', 'Statut', 'Actions'].map(h => (
+                    <th key={h} className="text-left py-3 px-3 text-xs font-semibold text-gray-600">{h}</th>
+                ))}
+            </tr>
+            </thead>
+            <tbody>
+            {[...Array(5)].map((_, i) => (
+                <tr key={i} className="border-b border-gray-100">
+                    {[140, 180, 100, 90, 60].map((w, j) => (
+                        <td key={j} className="py-3 px-3">
+                            <div className="h-3.5 bg-gray-200 rounded animate-pulse" style={{ width: w }} />
+                        </td>
+                    ))}
+                </tr>
+            ))}
+            </tbody>
+        </table>
+    </div>
+);
+
 const TripizUserManagement = () => {
     const [users, setUsers] = useState([]);
     const [stats, setStats] = useState({ total: 0, online: 0, blocked: 0, thisMonth: 0 });
@@ -215,7 +241,7 @@ const TripizUserManagement = () => {
                     )}
 
                     {/* Stats Cards - toujours affichées */}
-                    <StatsCards users={users} stats={stats}/>
+                    <StatsCards users={users} stats={stats} loading={loading}/>
 
                     {/* Filtres — visibles seulement si des utilisateurs existent */}
                     {!loading && users.length > 0 && (
@@ -253,13 +279,8 @@ const TripizUserManagement = () => {
                     <div
                         className="bg-white rounded-xl xl:rounded-2xl border border-gray-200 overflow-hidden shadow-lg">
 
-                        {/* Spinner inline pendant le chargement */}
-                        {loading && (
-                            <div className="flex items-center justify-center py-8">
-                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                                <span className="ml-2 text-gray-600">Chargement...</span>
-                            </div>
-                        )}
+                        {/* Squelette de tableau pendant le chargement */}
+                        {loading && <UserTableSkeleton/>}
 
                         {/* Aucun utilisateur */}
                         {!loading && users.length === 0 && !error && (

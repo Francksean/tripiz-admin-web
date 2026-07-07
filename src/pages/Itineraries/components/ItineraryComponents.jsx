@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Edit, Trash2, MapPin, Filter, Eye, ArrowRight, Route, Ruler, Bus } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, MapPin, Filter, Eye, ArrowRight, Route, Ruler, RouteOff } from 'lucide-react';
 import { itineraryService } from "../../../Services/ItineraireService.js";
 import { stationService } from "../../../Services/StationService.js";
 import ItineraireAddModal from "./ItineraireAddModal.jsx";
 import ItineraireEditModal from "./EditModal.jsx";
 import ItineraireDetailsModal from "./DetailsModal.jsx";
 
-// ── Charte TRIPIZ (cohérente avec StatisticsPage.jsx) ───────────────────────
 const BRAND = {
     blue:      '#3A68C4',
     lightBlue: '#498BD2',
@@ -303,7 +302,7 @@ const ItinerairesPage = () => {
 
                     {filteredItineraires.length === 0 && !loading && (
                         <div className="text-center py-10 text-gray-400">
-                            <Bus size={36} className="mx-auto mb-3 opacity-30" />
+                            <RouteOff size={36} className="mx-auto mb-3 opacity-30" />
                             {itineraires.length === 0 ? (
                                 <>
                                     <p className="text-sm font-medium">Aucun itinéraire configuré</p>

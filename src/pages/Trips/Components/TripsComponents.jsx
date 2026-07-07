@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Search, Filter, Eye, Edit, Trash2, Plus, Calendar, Clock, Users, MapPin, Bus, User } from 'lucide-react';
+import {Search, Filter, Eye, Edit, Trash2, Plus, Calendar, Clock, Users, MapPin, Bus, User, Map} from 'lucide-react';
 import { TripDetailModal } from "./DetailsModal.jsx";
 import { EditTripModal }   from "./EditModal.jsx";
 import { CreateTripModal } from "./AddModal.jsx";
@@ -246,7 +246,7 @@ const TripsManagement = () => {
                 <div className="mb-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                         <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: GRADIENT }}>
-                            <Bus className="w-5 h-5 text-white" />
+                            <Map className="w-5 h-5 text-white" />
                         </div>
                         <div>
                             <h1 className="text-xl lg:text-2xl font-bold" style={{ color: BRAND.dark }}>Gestion des Trajets</h1>
