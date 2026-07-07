@@ -27,6 +27,7 @@ export const TripizSidebar = ({ isCollapsed, onToggleCollapse, isMobile, onMobil
 
     const menuItems = [
         //{ id: 'dashboard', icon: Home,       label: 'Tableau de bord' },
+        { id: 'stats',     icon: Home,       label: 'Tableau de bord' },
         { id: 'users',     icon: Users,      label: 'Utilisateurs' },
         { id: 'buses',     icon: Bus,        label: 'Bus' },
         { id: 'routes',    icon: Route,      label: 'Itinéraires' },
