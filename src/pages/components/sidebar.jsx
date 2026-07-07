@@ -3,7 +3,7 @@ import {
     Bus, Users, BarChart3, LogOut, Home, Route,
     CreditCard, User, Map, ChevronLeft, ChevronRight
 } from 'lucide-react';
-import connectionService from "../../Services/Connexion.js";
+import {connectionService} from "../../Services/Connexion.js";
 
 export const TripizSidebar = ({ isCollapsed, onToggleCollapse, isMobile, onMobileClose }) => {
     const navigate = useNavigate();

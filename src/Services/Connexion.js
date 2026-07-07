@@ -43,4 +43,4 @@ const connectionService = {
     isAuthenticated: () => !!localStorage.getItem('authToken'),
 };
 
-export default connectionService;
+export { connectionService };
