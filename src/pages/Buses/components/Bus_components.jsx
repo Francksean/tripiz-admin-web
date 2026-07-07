@@ -1,9 +1,39 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Edit, Trash2, MapPin, Clock, Users, Filter, Eye, Settings, Bus, Navigation, Battery, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, MapPin, Users, Filter, Eye, Bus, Navigation, AlertTriangle, CheckCircle, MapPinned } from 'lucide-react';
 import {ModalAjout} from "./AjoutModal.jsx";
 import {ModalDetails} from "./Detail_modal.jsx";
 import {stationService} from "../../../Services/StationService.js";
 import {busService} from "../../../Services/BusService.js";
+
+// ── Charte TRIPIZ (cohérente avec StatisticsPage.jsx) ───────────────────────
+const BRAND = {
+    blue:      '#3A68C4',
+    lightBlue: '#498BD2',
+    dark:      '#2C2C2C',
+};
+const GRADIENT = `linear-gradient(135deg, ${BRAND.blue} 0%, ${BRAND.lightBlue} 100%)`;
+
+// ── Carte de statistique (même style que StatisticsPage.jsx) ────────────────
+const StatCard = ({ label, value, Icon, accent, loading }) => (
+    <div className="relative bg-white rounded-2xl p-5 shadow-sm border border-gray-100 overflow-hidden
+        transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
+        <div className="absolute top-0 left-0 right-0 h-1" style={{ background: accent.bar }} />
+        <div className="flex items-center justify-between">
+            <div className="min-w-0">
+                <p className="text-xs font-medium text-gray-500 tracking-wide">{label}</p>
+                <p className="text-2xl font-bold mt-1 truncate" style={{ color: BRAND.dark }}>
+                    {loading ? '…' : value}
+                </p>
+            </div>
+            <div
+                className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ml-3"
+                style={{ background: accent.bg }}
+            >
+                <Icon className="w-5 h-5" style={{ color: accent.icon }} />
+            </div>
+        </div>
+    </div>
+);
 
 const BusStationsPage = () => {
     const [activeTab, setActiveTab] = useState('bus');
@@ -18,16 +48,10 @@ const BusStationsPage = () => {
     // États pour les données
     const [busData, setBusData] = useState([]);
     const [stationsData, setStationsData] = useState([]);
-    const [busStats, setBusStats] = useState([
-        { label: 'En Service', value: '0', color: 'bg-green-100 text-green-600', icon: '✅' },
-        { label: 'En Maintenance', value: '0', color: 'bg-orange-100 text-orange-600', icon: '⚠️' },
-        { label: 'Capacité Totale', value: '0', color: 'bg-purple-100 text-purple-600', icon: '👥' }
-    ]);
-    const [stationStats, setStationStats] = useState([
-        { label: 'Total Stations', value: '0', color: 'bg-blue-100 text-blue-600', icon: '🚏' },
-        { label: 'Stations Actives', value: '0', color: 'bg-green-100 text-green-600', icon: '✅' },
-        { label: 'En Maintenance', value: '0', color: 'bg-orange-100 text-orange-600', icon: '⚠️' },
-    ]);
+
+    // Stats bus : valeurs brutes + définition de l'icône/couleur, séparément
+    const [busStats, setBusStats] = useState({ enService: '0', enMaintenance: '0', capaciteTotale: '0' });
+    const [stationStats, setStationStats] = useState({ total: '0', actives: '0', enMaintenance: '0' });
 
     // État de chargement et d'erreur
     const [loading, setLoading] = useState(false);
@@ -40,40 +64,19 @@ const BusStationsPage = () => {
             const buses = await busService.getAllBuses();
             setBusData(buses);
 
-            // Charger les statistiques des bus avec des logs pour le débogage
             const [inServiceCount, inMaintenanceCount, totalCapacity] = await Promise.all([
                 busService.countInServiceBuses(),
                 busService.countInMaintenanceBuses(),
                 busService.getTotalCapacity()
             ]);
 
-            // Logs pour débogage
-            console.log('Statistiques bus récupérées:', {
-                inServiceCount,
-                inMaintenanceCount,
-                totalCapacity
-            });
+            console.log('Statistiques bus récupérées:', { inServiceCount, inMaintenanceCount, totalCapacity });
 
-            setBusStats([
-                {
-                    label: 'En Service',
-                    value: inServiceCount.count.toString(),
-                    color: 'bg-green-100 text-green-600',
-                    icon: '✅'
-                },
-                {
-                    label: 'En Maintenance',
-                    value: inMaintenanceCount.count.toString(),
-                    color: 'bg-orange-100 text-orange-600',
-                    icon: '⚠️'
-                },
-                {
-                    label: 'Capacité Totale',
-                    value: totalCapacity.capacity.toString(),
-                    color: 'bg-purple-100 text-purple-600',
-                    icon: '👥'
-                }
-            ]);
+            setBusStats({
+                enService: inServiceCount.count.toString(),
+                enMaintenance: inMaintenanceCount.count.toString(),
+                capaciteTotale: totalCapacity.capacity.toString(),
+            });
         } catch (err) {
             console.error('Erreur lors du chargement des bus:', err);
             setError('Erreur lors du chargement des données des bus');
@@ -89,40 +92,19 @@ const BusStationsPage = () => {
             const stations = await stationService.getAllStations();
             setStationsData(stations);
 
-            // Charger les statistiques des stations avec des logs pour le débogage
             const [totalCount, inServiceCount, inMaintenanceCount] = await Promise.all([
                 stationService.countAllStations(),
                 stationService.countInServiceStations(),
                 stationService.countInMaintenanceStations()
             ]);
 
-            // Logs pour débogage
-            console.log('Statistiques stations récupérées:', {
-                totalCount,
-                inServiceCount,
-                inMaintenanceCount
-            });
+            console.log('Statistiques stations récupérées:', { totalCount, inServiceCount, inMaintenanceCount });
 
-            setStationStats([
-                {
-                    label: 'Total Stations',
-                    value: totalCount.count.toString(),
-                    color: 'bg-blue-100 text-blue-600',
-                    icon: '🚏'
-                },
-                {
-                    label: 'Stations Actives',
-                    value: inServiceCount.count.toString(),
-                    color: 'bg-green-100 text-green-600',
-                    icon: '✅'
-                },
-                {
-                    label: 'En Maintenance',
-                    value: inMaintenanceCount.count.toString(),
-                    color: 'bg-orange-100 text-orange-600',
-                    icon: '⚠️'
-                },
-            ]);
+            setStationStats({
+                total: totalCount.count.toString(),
+                actives: inServiceCount.count.toString(),
+                enMaintenance: inMaintenanceCount.count.toString(),
+            });
         } catch (err) {
             console.error('Erreur lors du chargement des stations:', err);
             setError('Erreur lors du chargement des données des stations');
@@ -131,7 +113,6 @@ const BusStationsPage = () => {
         }
     };
 
-    // Charger les données au montage du composant et lors du changement d'onglet
     useEffect(() => {
         if (activeTab === 'bus') {
             loadBusData();
@@ -140,6 +121,19 @@ const BusStationsPage = () => {
         }
     }, [activeTab]);
 
+    // Cartes affichées, avec icône lucide + accent coloré (comme StatisticsPage.jsx)
+    const currentStatCards = activeTab === 'bus'
+        ? [
+            { label: 'En Service',       value: busStats.enService,       Icon: CheckCircle,  accent: { bar: 'linear-gradient(135deg, #16A34A, #4ADE80)', bg: '#16A34A14', icon: '#16A34A' } },
+            { label: 'En Maintenance',   value: busStats.enMaintenance,   Icon: AlertTriangle, accent: { bar: 'linear-gradient(135deg, #F59E0B, #FBBF24)', bg: '#F59E0B14', icon: '#F59E0B' } },
+            { label: 'Capacité Totale',  value: busStats.capaciteTotale,  Icon: Users,         accent: { bar: 'linear-gradient(135deg, #8B5CF6, #A78BFA)', bg: '#8B5CF614', icon: '#8B5CF6' } },
+        ]
+        : [
+            { label: 'Total Stations',   value: stationStats.total,          Icon: MapPinned,    accent: { bar: GRADIENT, bg: `${BRAND.blue}14`, icon: BRAND.blue } },
+            { label: 'Stations Actives', value: stationStats.actives,        Icon: CheckCircle,  accent: { bar: 'linear-gradient(135deg, #16A34A, #4ADE80)', bg: '#16A34A14', icon: '#16A34A' } },
+            { label: 'En Maintenance',   value: stationStats.enMaintenance,  Icon: AlertTriangle, accent: { bar: 'linear-gradient(135deg, #F59E0B, #FBBF24)', bg: '#F59E0B14', icon: '#F59E0B' } },
+        ];
+
     // Fonction pour gérer la sauvegarde (ajout/modification)
     const handleSave = async (data, mode) => {
         try {
@@ -147,39 +141,19 @@ const BusStationsPage = () => {
 
             if (activeTab === 'bus') {
                 if (mode === 'edit') {
-                    // Vérification de l'ID
-                    if (!data.id) {
-                        throw new Error('ID du bus manquant pour la modification');
-                    }
-                    console.log('Modification bus avec ID:', data.id);
-
-                    // Séparer l'ID du body de la requête
+                    if (!data.id) throw new Error('ID du bus manquant pour la modification');
                     const { id, ...busDataWithoutId } = data;
-                    console.log('Body de la requête (sans ID):', busDataWithoutId);
-
                     await busService.updateBus(id, busDataWithoutId);
                 } else {
-                    console.log('Création nouveau bus');
-                    // Pour la création, pas d'ID
                     await busService.createBus(data);
                 }
                 await loadBusData();
             } else {
                 if (mode === 'edit') {
-                    // Vérification de l'ID
-                    if (!data.id) {
-                        throw new Error('ID de la station manquant pour la modification');
-                    }
-                    console.log('Modification station avec ID:', data.id);
-
-                    // Séparer l'ID du body de la requête
+                    if (!data.id) throw new Error('ID de la station manquant pour la modification');
                     const { id, ...stationDataWithoutId } = data;
-                    console.log('Body de la requête (sans ID):', stationDataWithoutId);
-
                     await stationService.updateStation(id, stationDataWithoutId);
                 } else {
-                    console.log('Création nouvelle station');
-                    // Pour la création, pas d'ID
                     await stationService.createStation(data);
                 }
                 await loadStationsData();
@@ -221,7 +195,6 @@ const BusStationsPage = () => {
     };
 
     const currentData = activeTab === 'bus' ? busData : stationsData;
-    const currentStats = activeTab === 'bus' ? busStats : stationStats;
 
     const filteredData = currentData.filter(item => {
         const searchField = activeTab === 'bus' ?
@@ -290,9 +263,14 @@ const BusStationsPage = () => {
                 {/* En-tête */}
                 <div className="mb-6 lg:mb-8">
                     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-                        <div>
-                            <h1 className="text-xl lg:text-2xl font-bold text-gray-800">Gestion des Bus & Stations</h1>
-                            <p className="text-gray-600 mt-1 text-sm">Gérez votre flotte de bus et le réseau de stations</p>
+                        <div className="flex items-center gap-3">
+                            <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: GRADIENT }}>
+                                <Bus className="w-5 h-5 text-white" />
+                            </div>
+                            <div>
+                                <h1 className="text-xl lg:text-2xl font-bold" style={{ color: BRAND.dark }}>Gestion des Bus & Stations</h1>
+                                <p className="text-gray-500 mt-0.5 text-sm">Gérez votre flotte de bus et le réseau de stations</p>
+                            </div>
                         </div>
                         <button
                             onClick={() => {
@@ -301,7 +279,8 @@ const BusStationsPage = () => {
                                 setShowAddModal(true);
                             }}
                             disabled={loading}
-                            className="flex items-center px-4 sm:px-5 py-3 text-sm bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-xl hover:scale-105 transition-all shadow-lg hover:shadow-xl w-fit disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex items-center px-4 sm:px-5 py-3 text-sm text-white font-medium rounded-xl hover:scale-105 transition-all shadow-lg hover:shadow-xl w-fit disabled:opacity-50 disabled:cursor-not-allowed"
+                            style={{ background: GRADIENT }}
                         >
                             <Plus className="w-4 h-4 mr-2"/>
                             Nouveau {activeTab === 'bus' ? 'Bus' : 'Station'}
@@ -311,15 +290,12 @@ const BusStationsPage = () => {
 
                 {/* Onglets */}
                 <div className="mb-6">
-                    <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-1.5 inline-flex gap-1">
                         <button
                             onClick={() => setActiveTab('bus')}
                             disabled={loading}
-                            className={`flex items-center px-4 py-2 rounded-md text-sm font-medium transition-all disabled:opacity-50 ${
-                                activeTab === 'bus'
-                                    ? 'bg-white text-blue-600 shadow-sm'
-                                    : 'text-gray-600 hover:text-gray-800'
-                            }`}
+                            className="flex items-center px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 disabled:opacity-50"
+                            style={activeTab === 'bus' ? { background: GRADIENT, color: '#fff' } : { color: '#6B7280' }}
                         >
                             <Bus className="w-4 h-4 mr-2" />
                             Bus
@@ -327,11 +303,8 @@ const BusStationsPage = () => {
                         <button
                             onClick={() => setActiveTab('stations')}
                             disabled={loading}
-                            className={`flex items-center px-4 py-2 rounded-md text-sm font-medium transition-all disabled:opacity-50 ${
-                                activeTab === 'stations'
-                                    ? 'bg-white text-blue-600 shadow-sm'
-                                    : 'text-gray-600 hover:text-gray-800'
-                            }`}
+                            className="flex items-center px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 disabled:opacity-50"
+                            style={activeTab === 'stations' ? { background: GRADIENT, color: '#fff' } : { color: '#6B7280' }}
                         >
                             <Navigation className="w-4 h-4 mr-2" />
                             Stations
@@ -340,21 +313,9 @@ const BusStationsPage = () => {
                 </div>
 
                 {/* Statistiques */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
-                    {currentStats.map((stat, index) => (
-                        <div key={index} className="bg-white rounded-lg p-3 shadow-sm border border-gray-100">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-gray-600 text-xs font-medium">{stat.label}</p>
-                                    <p className="text-xl font-bold text-gray-800 mt-1">
-                                        {loading ? '...' : stat.value}
-                                    </p>
-                                </div>
-                                <div className={`w-10 h-10 rounded-lg ${stat.color} flex items-center justify-center text-lg`}>
-                                    {stat.icon}
-                                </div>
-                            </div>
-                        </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                    {currentStatCards.map((stat, index) => (
+                        <StatCard key={index} {...stat} loading={loading} />
                     ))}
                 </div>
 
@@ -400,7 +361,7 @@ const BusStationsPage = () => {
                 <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
                     {loading && (
                         <div className="flex items-center justify-center py-8">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: BRAND.blue }}></div>
                             <span className="ml-2 text-gray-600">Chargement...</span>
                         </div>
                     )}
@@ -542,7 +503,6 @@ const BusStationsPage = () => {
                 </div>
             </div>
 
-            {/*Modal to see the details of stations or buses*/}
             <ModalDetails
                 activeTab={activeTab}
                 showDetailsModal={showDetailsModal}
@@ -550,7 +510,6 @@ const BusStationsPage = () => {
                 detailsItem={detailsItem}
             />
 
-            {/*Modal to add or edit stations or buses*/}
             <ModalAjout
                 activeTab={activeTab}
                 showAddModal={showAddModal}

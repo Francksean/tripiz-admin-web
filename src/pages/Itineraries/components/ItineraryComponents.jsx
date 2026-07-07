@@ -1,10 +1,40 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Edit, Trash2, MapPin, Filter, Eye, ArrowRight } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, MapPin, Filter, Eye, ArrowRight, Route, Ruler, Bus } from 'lucide-react';
 import { itineraryService } from "../../../Services/ItineraireService.js";
 import { stationService } from "../../../Services/StationService.js";
 import ItineraireAddModal from "./ItineraireAddModal.jsx";
 import ItineraireEditModal from "./EditModal.jsx";
 import ItineraireDetailsModal from "./DetailsModal.jsx";
+
+// ── Charte TRIPIZ (cohérente avec StatisticsPage.jsx) ───────────────────────
+const BRAND = {
+    blue:      '#3A68C4',
+    lightBlue: '#498BD2',
+    dark:      '#2C2C2C',
+};
+const GRADIENT = `linear-gradient(135deg, ${BRAND.blue} 0%, ${BRAND.lightBlue} 100%)`;
+
+// ── Carte de statistique (même style que StatisticsPage.jsx) ────────────────
+const StatCard = ({ label, value, Icon, accent, loading }) => (
+    <div className="relative bg-white rounded-2xl p-5 shadow-sm border border-gray-100 overflow-hidden
+        transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
+        <div className="absolute top-0 left-0 right-0 h-1" style={{ background: accent.bar }} />
+        <div className="flex items-center justify-between">
+            <div className="min-w-0">
+                <p className="text-xs font-medium text-gray-500 tracking-wide">{label}</p>
+                <p className="text-2xl font-bold mt-1 truncate" style={{ color: BRAND.dark }}>
+                    {loading ? '…' : value}
+                </p>
+            </div>
+            <div
+                className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ml-3"
+                style={{ background: accent.bg }}
+            >
+                <Icon className="w-5 h-5" style={{ color: accent.icon }} />
+            </div>
+        </div>
+    </div>
+);
 
 const ItinerairesPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -112,8 +142,8 @@ const ItinerairesPage = () => {
             : 'bg-purple-100 text-purple-700 px-2 py-0.5 rounded text-xs font-medium';
 
     const statsCards = [
-        { label: 'Total Itinéraires', value: stats.total.toString(), color: 'bg-blue-100 text-blue-600', icon: '🚌' },
-        { label: 'Distance Totale',   value: `${stats.totalDistance} km`, color: 'bg-purple-100 text-purple-600', icon: '📏' },
+        { label: 'Total Itinéraires', value: stats.total.toString(),      Icon: Route, accent: { bar: GRADIENT, bg: `${BRAND.blue}14`, icon: BRAND.blue } },
+        { label: 'Distance Totale',   value: `${stats.totalDistance} km`, Icon: Ruler, accent: { bar: 'linear-gradient(135deg, #8B5CF6, #A78BFA)', bg: '#8B5CF614', icon: '#8B5CF6' } },
     ];
 
     return (
@@ -123,14 +153,19 @@ const ItinerairesPage = () => {
                 {/* En-tête */}
                 <div className="mb-6 lg:mb-8">
                     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-                        <div>
-                            <h1 className="text-xl lg:text-2xl font-bold text-gray-800">Gestion des Itinéraires</h1>
-                            <p className="text-gray-600 mt-1 text-sm">Gérez les itinéraires, lignes et parcours de bus</p>
+                        <div className="flex items-center gap-3">
+                            <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: GRADIENT }}>
+                                <Route className="w-5 h-5 text-white" />
+                            </div>
+                            <div>
+                                <h1 className="text-xl lg:text-2xl font-bold" style={{ color: BRAND.dark }}>Gestion des Itinéraires</h1>
+                                <p className="text-gray-500 mt-0.5 text-sm">Gérez les itinéraires, lignes et parcours de bus</p>
+                            </div>
                         </div>
                         <button
                             onClick={() => setShowAddModal(true)}
-                            className="flex items-center px-4 sm:px-5 py-3 text-sm bg-gradient-to-r from-blue-600 to-blue-700
-                                text-white font-medium rounded-xl hover:scale-105 transition-all shadow-lg hover:shadow-xl w-fit"
+                            className="flex items-center px-4 sm:px-5 py-3 text-sm text-white font-medium rounded-xl hover:scale-105 transition-all shadow-lg hover:shadow-xl w-fit"
+                            style={{ background: GRADIENT }}
                         >
                             <Plus className="w-4 h-4 mr-2" />
                             Nouvel Itinéraire
@@ -139,19 +174,9 @@ const ItinerairesPage = () => {
                 </div>
 
                 {/* Statistiques */}
-                <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="grid grid-cols-2 gap-4 mb-4">
                     {statsCards.map((stat, i) => (
-                        <div key={i} className="bg-white rounded-lg p-3 shadow-sm border border-gray-100">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-gray-600 text-xs font-medium">{stat.label}</p>
-                                    <p className="text-xl font-bold text-gray-800 mt-1">{stat.value}</p>
-                                </div>
-                                <div className={`w-10 h-10 rounded-lg ${stat.color} flex items-center justify-center text-lg`}>
-                                    {stat.icon}
-                                </div>
-                            </div>
-                        </div>
+                        <StatCard key={i} {...stat} loading={loading} />
                     ))}
                 </div>
 
@@ -278,7 +303,7 @@ const ItinerairesPage = () => {
 
                     {filteredItineraires.length === 0 && !loading && (
                         <div className="text-center py-10 text-gray-400">
-                            <div className="text-4xl mb-2">🚌</div>
+                            <Bus size={36} className="mx-auto mb-3 opacity-30" />
                             {itineraires.length === 0 ? (
                                 <>
                                     <p className="text-sm font-medium">Aucun itinéraire configuré</p>

@@ -1,10 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { Search, Filter, Eye, MapPin, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Search, Filter, Eye, MapPin, CheckCircle, XCircle, AlertCircle, Ticket, Bus, Wallet } from 'lucide-react';
 import TicketDetailModal from "./DetailsModal.jsx";
 import { trajetService }     from "../../../Services/TrajetService.js";
 import { itineraryService }  from "../../../Services/ItineraireService.js";
 import { userService }       from "../../../Services/UserService.js";
 import {ticketService} from "../../../Services/TicketsService.js";
+
+// ── Charte TRIPIZ (cohérente avec StatisticsPage.jsx) ───────────────────────
+const BRAND = {
+    blue:      '#3A68C4',
+    lightBlue: '#498BD2',
+    dark:      '#2C2C2C',
+};
+const GRADIENT = `linear-gradient(135deg, ${BRAND.blue} 0%, ${BRAND.lightBlue} 100%)`;
 
 const STATUS_STYLE = {
     VALIDE:  'bg-green-50 text-green-700',
@@ -29,6 +37,28 @@ const formatDate = (d) => {
     return date.toLocaleDateString('fr-FR') + ' ' + date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 };
 
+// ── Carte de statistique (même style que StatisticsPage.jsx) ────────────────
+const StatCard = ({ label, value, Icon, accent, loading }) => (
+    <div className="relative bg-white rounded-2xl p-5 shadow-sm border border-gray-100 overflow-hidden
+        transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
+        <div className="absolute top-0 left-0 right-0 h-1" style={{ background: accent.bar }} />
+        <div className="flex items-center justify-between">
+            <div className="min-w-0">
+                <p className="text-xs font-medium text-gray-500 tracking-wide">{label}</p>
+                <p className="text-2xl font-bold mt-1 truncate" style={{ color: BRAND.dark }}>
+                    {loading ? '…' : value}
+                </p>
+            </div>
+            <div
+                className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ml-3"
+                style={{ background: accent.bg }}
+            >
+                <Icon className="w-5 h-5" style={{ color: accent.icon }} />
+            </div>
+        </div>
+    </div>
+);
+
 const TicketsPage = () => {
     const [tickets, setTickets]           = useState([]);
     const [loading, setLoading]           = useState(true);
@@ -39,7 +69,6 @@ const TicketsPage = () => {
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [selectedTicket, setSelectedTicket]   = useState(null);
 
-    // Maps de résolution : userId → nom, tripId → libellé du trajet
     const [userMap, setUserMap] = useState({});
     const [tripMap, setTripMap] = useState({});
 
@@ -58,7 +87,6 @@ const TicketsPage = () => {
                 itineraryService.getAllItineraries(),
             ]);
 
-            // Map itinéraires (pour résoudre le nom de la ligne depuis un trip)
             const iMap = {};
             if (itinerariesData.status === 'fulfilled' && Array.isArray(itinerariesData.value)) {
                 itinerariesData.value.forEach(i => {
@@ -68,7 +96,6 @@ const TicketsPage = () => {
                 });
             }
 
-            // Map trips → libellé lisible (itinéraire + date/heure)
             const tMap = {};
             if (tripsData.status === 'fulfilled' && Array.isArray(tripsData.value)) {
                 tripsData.value.forEach(t => {
@@ -82,7 +109,6 @@ const TicketsPage = () => {
             }
             setTripMap(tMap);
 
-            // Map utilisateurs → nom
             const uMap = {};
             if (usersData.status === 'fulfilled' && Array.isArray(usersData.value)) {
                 usersData.value.forEach(u => {
@@ -118,10 +144,14 @@ const TicketsPage = () => {
 
     // Stats calculées à partir des données réelles
     const statsCards = [
-        { label: 'Total Tickets',    value: tickets.length,                                                       color: 'bg-blue-100 text-blue-600',    icon: '🎫' },
-        { label: 'Tickets Valides',  value: tickets.filter(t => (t.status || '').toUpperCase() === 'VALIDE').length,   color: 'bg-green-100 text-green-600',  icon: '✅' },
-        { label: 'Tickets Utilisés', value: tickets.filter(t => (t.status || '').toUpperCase() === 'UTILISE').length,  color: 'bg-purple-100 text-purple-600', icon: '🚌' },
-        { label: 'Revenus',          value: `${tickets.reduce((s, t) => s + (Number(t.price) || 0), 0)} FCFA`,     color: 'bg-orange-100 text-orange-600', icon: '💰' },
+        { label: 'Total Tickets',    value: tickets.length,
+            Icon: Ticket, accent: { bar: GRADIENT, bg: `${BRAND.blue}14`, icon: BRAND.blue } },
+        { label: 'Tickets Valides',  value: tickets.filter(t => (t.status || '').toUpperCase() === 'VALIDE').length,
+            Icon: CheckCircle, accent: { bar: 'linear-gradient(135deg, #16A34A, #4ADE80)', bg: '#16A34A14', icon: '#16A34A' } },
+        { label: 'Tickets Utilisés', value: tickets.filter(t => (t.status || '').toUpperCase() === 'UTILISE').length,
+            Icon: Bus, accent: { bar: 'linear-gradient(135deg, #8B5CF6, #A78BFA)', bg: '#8B5CF614', icon: '#8B5CF6' } },
+        { label: 'Revenus',          value: `${tickets.reduce((s, t) => s + (Number(t.price) || 0), 0)} FCFA`,
+            Icon: Wallet, accent: { bar: 'linear-gradient(135deg, #F59E0B, #FBBF24)', bg: '#F59E0B14', icon: '#F59E0B' } },
     ];
 
     const filtered = tickets.filter(t => {
@@ -140,9 +170,14 @@ const TicketsPage = () => {
 
                 {/* En-tête */}
                 <div className="mb-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-                    <div>
-                        <h1 className="text-xl lg:text-2xl font-bold text-gray-800">Gestion des Tickets</h1>
-                        <p className="text-gray-500 mt-1 text-sm">Gérez tous les tickets achetés par les utilisateurs</p>
+                    <div className="flex items-center gap-3">
+                        <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: GRADIENT }}>
+                            <Ticket className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                            <h1 className="text-xl lg:text-2xl font-bold" style={{ color: BRAND.dark }}>Gestion des Tickets</h1>
+                            <p className="text-gray-500 mt-0.5 text-sm">Gérez tous les tickets achetés par les utilisateurs</p>
+                        </div>
                     </div>
                 </div>
 
@@ -155,19 +190,9 @@ const TicketsPage = () => {
                 )}
 
                 {/* Stats */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-                    {statsCards.map((s, i) => (
-                        <div key={i} className="bg-white rounded-lg p-3 shadow-sm border border-gray-100">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-gray-500 text-xs font-medium">{s.label}</p>
-                                    <p className="text-xl font-bold text-gray-800 mt-1">
-                                        {loading ? <span className="inline-block w-8 h-5 bg-gray-200 rounded animate-pulse" /> : s.value}
-                                    </p>
-                                </div>
-                                <div className={`w-10 h-10 rounded-lg ${s.color} flex items-center justify-center text-lg`}>{s.icon}</div>
-                            </div>
-                        </div>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                    {statsCards.map((stat, i) => (
+                        <StatCard key={i} {...stat} loading={loading} />
                     ))}
                 </div>
 
@@ -237,12 +262,12 @@ const TicketsPage = () => {
                                             </td>
                                             <td className="py-2.5 px-3">
                                                 <p className="text-xs font-medium text-gray-800 flex items-center gap-1">
-                                                    <MapPin size={10} className="text-blue-500 flex-shrink-0" />
+                                                    <MapPin size={10} style={{ color: BRAND.blue }} className="flex-shrink-0" />
                                                     {resolveTrip(ticket.tripId)}
                                                 </p>
                                             </td>
                                             <td className="py-2.5 px-3">
-                                                <span className="text-sm font-bold text-blue-600">{ticket.price}</span>
+                                                <span className="text-sm font-bold" style={{ color: BRAND.blue }}>{ticket.price}</span>
                                                 <span className="text-xs text-gray-400 ml-1">FCFA</span>
                                             </td>
                                             <td className="py-2.5 px-3">
@@ -286,7 +311,7 @@ const TicketsPage = () => {
 
                     {!loading && filtered.length === 0 && (
                         <div className="text-center py-10 text-gray-400">
-                            <div className="text-3xl mb-2">🎫</div>
+                            <Ticket size={36} className="mx-auto mb-3 opacity-30" />
                             <p className="text-sm font-medium">Aucun ticket trouvé</p>
                             <p className="text-xs mt-1">Essayez de modifier vos critères de recherche</p>
                         </div>

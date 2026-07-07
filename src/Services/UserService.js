@@ -6,19 +6,6 @@ export const userService = {
         return api.testConnection();
     },
 
-    // Inscription client
-    signupAsClient: async (userData) => {
-        try {
-            return await api.request('/user/auth/signupAsClient', {
-                method: 'POST',
-                body: JSON.stringify(userData),
-            });
-        } catch (error) {
-            console.error('Erreur inscription client:', error);
-            throw new Error(`Échec de l'inscription client: ${error.message}`);
-        }
-    },
-
     // Inscription chauffeur
     signupAsDriver: async (userData) => {
         try {
@@ -79,19 +66,6 @@ export const userService = {
 
             // Pour les autres erreurs, les propager
             throw new Error(`Impossible de récupérer les utilisateurs: ${error.message}`);
-        }
-    },
-
-    // Mettre à jour un utilisateur
-    updateUser: async (id, userData) => {
-        try {
-            return await api.request(`/user/${id}`, {
-                method: 'PATCH',
-                body: JSON.stringify(userData),
-            });
-        } catch (error) {
-            console.error('Erreur mise à jour utilisateur:', error);
-            throw new Error(`Échec de la mise à jour: ${error.message}`);
         }
     },
 
