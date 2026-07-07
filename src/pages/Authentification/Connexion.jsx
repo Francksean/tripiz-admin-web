@@ -34,7 +34,7 @@ const TripizAdminLogin = () => {
         try {
             console.log('Payload envoyé:', { username: email, password }); // à retirer après debug
             await connectionService.login({ username: email, password });
-            navigate('/users');
+            navigate('/stats');
         } catch (err) {
             setError(err.message || 'Identifiants incorrects. Réessayez.');
         } finally {
