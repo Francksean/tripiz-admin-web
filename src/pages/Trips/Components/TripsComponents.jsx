@@ -8,6 +8,13 @@ import { userService }       from "../../../Services/UserService.js";
 import { itineraryService }  from "../../../Services/ItineraireService.js";
 import { trajetService }     from "../../../Services/TrajetService.js";
 
+// ── Charte TRIPIZ (cohérente avec StatisticsPage.jsx) ───────────────────────
+const BRAND = {
+    blue:      '#3A68C4',
+    lightBlue: '#498BD2',
+    dark:      '#2C2C2C',
+};
+const GRADIENT = `linear-gradient(135deg, ${BRAND.blue} 0%, ${BRAND.lightBlue} 100%)`;
 
 const STATUS_STYLE = {
     PROGRAMME: 'bg-blue-50 text-blue-700',
@@ -30,6 +37,28 @@ const STATUS_LABEL = {
 
 const fmt = (t) => (t ? String(t).substring(0, 5) : '--:--');
 
+// ── Carte de statistique (même style que StatisticsPage.jsx) ────────────────
+const StatCard = ({ label, value, Icon, accent, loading }) => (
+    <div className="relative bg-white rounded-2xl p-5 shadow-sm border border-gray-100 overflow-hidden
+        transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
+        <div className="absolute top-0 left-0 right-0 h-1" style={{ background: accent.bar }} />
+        <div className="flex items-center justify-between">
+            <div className="min-w-0">
+                <p className="text-xs font-medium text-gray-500 tracking-wide">{label}</p>
+                <p className="text-2xl font-bold mt-1 truncate" style={{ color: BRAND.dark }}>
+                    {loading ? '…' : value}
+                </p>
+            </div>
+            <div
+                className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ml-3"
+                style={{ background: accent.bg }}
+            >
+                <Icon className="w-5 h-5" style={{ color: accent.icon }} />
+            </div>
+        </div>
+    </div>
+);
+
 const TripsManagement = () => {
     const [trips, setTrips]               = useState([]);
     const [loading, setLoading]           = useState(true);
@@ -45,9 +74,9 @@ const TripsManagement = () => {
     const [tripToEdit, setTripToEdit]           = useState(null);
 
     // Lookups pour résoudre les UUIDs en noms lisibles
-    const [busMap, setBusMap]             = useState({});   // { uuid → 'Bus 12 — DLA-001' }
-    const [driverMap, setDriverMap]       = useState({});   // { uuid → 'Jean Mballa' }
-    const [itineraryMap, setItineraryMap] = useState({});   // { uuid → 'Douala - Bonabéri (Ligne A)' }
+    const [busMap, setBusMap]             = useState({});
+    const [driverMap, setDriverMap]       = useState({});
+    const [itineraryMap, setItineraryMap] = useState({});
 
     // Listes pour les selects des modaux
     const [buses, setBuses]           = useState([]);
@@ -68,7 +97,6 @@ const TripsManagement = () => {
         setLoading(true);
         setError(null);
         try {
-            // Charger tout en parallèle
             const [tripsData, busList, driverList, itineraryList, statsData, totalTrips] =
                 await Promise.allSettled([
                     trajetService.getAllTrips(),
@@ -76,18 +104,16 @@ const TripsManagement = () => {
                     userService.getAllDrivers ? userService.getAllDrivers() : Promise.resolve([]),
                     itineraryService.getAllItineraries(),
                     trajetService.getStatistics(),
-                    //trajetService.countAllPassengers(),
                     trajetService.countTrips(),
                 ]);
 
-            // --- Construction des maps, version robuste ---
             const bMap = {};
             const bList = [];
             if (busList.status === 'fulfilled' && Array.isArray(busList.value)) {
                 busList.value.forEach(b => {
                     const id = b.busId ?? b.id ?? b.bus_id;
                     const label = `Bus ${b.busNumber ?? b.bus_number ?? '?'} - ${b.matriculation || b.immatriculation || ''}`.trim();
-                    if (id !== undefined) bMap[String(id)] = label; // clé toujours en string
+                    if (id !== undefined) bMap[String(id)] = label;
                     bList.push({ id, label });
                 });
             } else if (busList.status === 'rejected') {
@@ -129,23 +155,27 @@ const TripsManagement = () => {
 
             if (tripsData.status === 'fulfilled') {
                 setTrips(tripsData.value);
-                console.log('Exemple trip:', tripsData.value?.[0]);
-                console.log('busMap:', bMap);
-                console.log('driverMap:', dMap);
-                console.log('itineraryMap:', iMap);
             } else {
-                setError('Impossible de charger les trajets.');
+                console.log('Impossible de charger les trajets.');
             }
 
-
             const s = statsData.status === 'fulfilled' ? statsData.value : {};
-            //const p = passengersData.status === 'fulfilled' ? passengersData.value : 0;
             const t = totalTrips.status === 'fulfilled' ? totalTrips.value : 0;
+
+            const totalValue = typeof t === 'number' ? t : (t?.count ?? 0);
+            const activeValue = s.ongoing ?? 0;
+            const completedValue = s.completed ?? 0;
+
+            console.log('--- DEBUG STATS ---', {
+                Données_Brutes: { statsData, totalTrips },
+                Valeurs_Extraites: { s, t },
+                Valeurs_Finales: { total: totalValue, active: activeValue, completed: completedValue }
+            });
+
             setStats({
-                total:      typeof t === 'number' ? t : (t?.count ?? 0),
-                active:     s.ongoing    ?? 0,
-                completed:  s.completed  ?? 0,
-                //passengers: typeof p === 'number' ? p : (p?.count ?? 0),
+                total:      totalValue,
+                active:     activeValue,
+                completed:  completedValue,
             });
 
         } catch (err) {
@@ -193,10 +223,9 @@ const TripsManagement = () => {
     };
 
     const statsCards = [
-        { label: 'Total Trajets',    value: stats.total,      color: 'bg-green-100 text-green-600',  Icon: Bus      },
-        { label: 'Trajets Actifs',   value: stats.active,     color: 'bg-orange-100 text-orange-600', Icon: Clock    },
-        { label: 'Trajets Terminés', value: stats.completed,  color: 'bg-purple-100 text-purple-600', Icon: Calendar },
-        //{ label: 'Total Passagers',  value: stats.passengers, color: 'bg-blue-100 text-blue-600',    Icon: Users    },
+        { label: 'Total Trajets',    value: stats.total,     Icon: Bus,      accent: { bar: GRADIENT, bg: `${BRAND.blue}14`, icon: BRAND.blue } },
+        { label: 'Trajets Actifs',   value: stats.active,    Icon: Clock,    accent: { bar: 'linear-gradient(135deg, #F59E0B, #FBBF24)', bg: '#F59E0B14', icon: '#F59E0B' } },
+        { label: 'Trajets Terminés', value: stats.completed, Icon: Calendar, accent: { bar: 'linear-gradient(135deg, #8B5CF6, #A78BFA)', bg: '#8B5CF614', icon: '#8B5CF6' } },
     ];
 
     const filtered = trips.filter(t => {
@@ -215,14 +244,19 @@ const TripsManagement = () => {
 
                 {/* En-tête */}
                 <div className="mb-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-xl lg:text-2xl font-bold text-gray-800">Gestion des Trajets</h1>
-                        <p className="text-gray-500 mt-1 text-sm">Suivez et gérez tous les trajets en temps réel</p>
+                    <div className="flex items-center gap-3">
+                        <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: GRADIENT }}>
+                            <Bus className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                            <h1 className="text-xl lg:text-2xl font-bold" style={{ color: BRAND.dark }}>Gestion des Trajets</h1>
+                            <p className="text-gray-500 mt-0.5 text-sm">Suivez et gérez tous les trajets en temps réel</p>
+                        </div>
                     </div>
                     <button
                         onClick={() => setShowCreateModal(true)}
-                        className="flex items-center px-4 sm:px-5 py-3 text-sm bg-gradient-to-r from-blue-600 to-blue-700
-                            text-white font-medium rounded-xl hover:scale-105 transition-all shadow-lg hover:shadow-xl w-fit"
+                        className="flex items-center px-4 sm:px-5 py-3 text-sm text-white font-medium rounded-xl hover:scale-105 transition-all shadow-lg hover:shadow-xl w-fit"
+                        style={{ background: GRADIENT }}
                     >
                         <Plus className="w-4 h-4 mr-2" /> Nouveau Trajet
                     </button>
@@ -237,21 +271,9 @@ const TripsManagement = () => {
                 )}
 
                 {/* Stats */}
-                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-5">
-                    {statsCards.map(({ label, value, color, Icon }) => (
-                        <div key={label} className="bg-white rounded-lg p-3 shadow-sm border border-gray-100">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-gray-500 text-xs font-medium">{label}</p>
-                                    <p className="text-xl font-bold text-gray-800 mt-1">
-                                        {loading ? <span className="inline-block w-8 h-5 bg-gray-200 rounded animate-pulse" /> : value}
-                                    </p>
-                                </div>
-                                <div className={`w-10 h-10 rounded-lg ${color} flex items-center justify-center`}>
-                                    <Icon className="w-5 h-5" />
-                                </div>
-                            </div>
-                        </div>
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-5">
+                    {statsCards.map((stat, i) => (
+                        <StatCard key={i} {...stat} loading={loading} />
                     ))}
                 </div>
 
@@ -318,7 +340,7 @@ const TripsManagement = () => {
                                     return (
                                         <tr key={tripId} className="hover:bg-gray-50 transition-colors">
                                             <td className="py-3 px-4">
-                                                <p className="text-sm font-medium text-blue-600 flex items-center gap-1">
+                                                <p className="text-sm font-medium flex items-center gap-1" style={{ color: BRAND.blue }}>
                                                     <MapPin size={12} className="text-gray-400 flex-shrink-0" />
                                                     <span className="truncate max-w-[160px]">{resolveItinerary(itiId)}</span>
                                                 </p>
@@ -337,19 +359,12 @@ const TripsManagement = () => {
                                             <td className="py-3 px-4">
                                                 <div className="text-xs space-y-0.5">
                                                     <div className="flex justify-between gap-3">
-                                                        {/*<span className="text-gray-400"></span>*/}
                                                         <span className="font-medium text-gray-700">
                                                                 {fmt(trip.schedule_departure)}
                                                             </span>
                                                     </div>
                                                 </div>
                                             </td>
-                                            {/*<td className="py-3 px-4">*/}
-                                            {/*        <span className="text-sm font-medium text-gray-800 flex items-center gap-1">*/}
-                                            {/*            <Users size={12} className="text-gray-400" />*/}
-                                            {/*            {trip.passenger_count ?? 0}*/}
-                                            {/*        </span>*/}
-                                            {/*</td>*/}
                                             <td className="py-3 px-4">
                                                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_STYLE[status] || 'bg-gray-100 text-gray-600'}`}>
                                                         <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${STATUS_DOT[status] || 'bg-gray-400'}`} />
@@ -385,8 +400,6 @@ const TripsManagement = () => {
                         </div>
                     )}
                 </div>
-
-
 
                 {/* Modaux */}
                 <TripDetailModal
