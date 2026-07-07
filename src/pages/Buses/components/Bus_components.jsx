@@ -283,7 +283,7 @@ const BusStationsPage = () => {
                             style={{ background: GRADIENT }}
                         >
                             <Plus className="w-4 h-4 mr-2"/>
-                            Nouveau {activeTab === 'bus' ? 'Bus' : 'Station'}
+                            {activeTab === 'bus' ? 'Nouveau Bus' : 'Nouvelle Station'}
                         </button>
                     </div>
                 </div>
