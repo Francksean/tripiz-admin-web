@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bus, Lock, Mail, AlertCircle } from 'lucide-react';
-import connectionService from "../../Services/Connexion.js";
+import {connectionService} from "../../Services/Connexion.js";
 
 
 const TripizAdminLogin = () => {
     const navigate = useNavigate();
 
     const [showPassword, setShowPassword] = useState(false);
-    const [rememberMe, setRememberMe]     = useState(true);
     const [formData, setFormData]         = useState({ email: '', password: '' });
     const [isLoading, setIsLoading]       = useState(false);
     const [error, setError]               = useState('');
