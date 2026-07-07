@@ -1,6 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { X, User, Route, Calendar, Clock, CreditCard, CheckCircle, XCircle, AlertCircle, QrCode, Wallet } from 'lucide-react';
+import { X, User, Route, Calendar, CreditCard, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 
 const STATUS_STYLE = {
     VALIDE:  'bg-green-50 text-green-700',
@@ -40,8 +40,6 @@ const formatDate = (d) => {
         + date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 };
 
-const shortId = (id) => (id ? String(id).split('-')[0].toUpperCase() : '—');
-
 const Row = ({ label, value }) => (
     <div className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
         <span className="text-xs text-gray-400">{label}</span>
@@ -66,26 +64,17 @@ const DateCard = ({ icon: Icon, label, value, bg, iconColor }) => (
     </div>
 );
 
-// resolveUser / resolveRoute sont fournis par TicketsPage (mêmes maps que la liste)
-const TicketDetailModal = ({ isOpen, onClose, ticket, resolveUser, resolveRoute }) => {
+// resolveUser / resolveTrip sont optionnels : si absents, on retombe sur les IDs bruts
+const TicketDetailModal = ({ isOpen, onClose, ticket, resolveUser, resolveTrip }) => {
     if (!isOpen || !ticket) return null;
 
-    const ticketId = ticket.ticketId ?? ticket.ticket_id ?? ticket.id;
-    const userId   = ticket.userId ?? ticket.user_id;
-    const tripId   = ticket.tripId ?? ticket.trip_id;
-    const status   = ticket.status ?? ticket.ticket_status;
-    const price    = ticket.price ?? ticket.price_paid ?? 0;
-    const paymentMethod = ticket.paymentMethod ?? ticket.payment_method;
-    const purchaseDate  = ticket.purchaseDate ?? ticket.purchase_date;
-    const usageDate     = ticket.useDate ?? ticket.usage_date;
-    const expirationDate = ticket.expirationDate ?? ticket.expiration_date;
-
-    const userLabel  = resolveUser ? resolveUser(userId) : (userId ? shortId(userId) : '—');
-    const routeLabel = resolveRoute ? resolveRoute(tripId) : (tripId ? `Trajet ${shortId(tripId)}` : '—');
-
+    const status      = (ticket.status || '').toUpperCase();
     const statusStyle = STATUS_STYLE[status] || 'bg-gray-100 text-gray-600';
     const statusDot   = STATUS_DOT[status]   || 'bg-gray-400';
-    const statusLabel = STATUS_LABEL[status] || status;
+    const statusLabel = STATUS_LABEL[status] || ticket.status;
+
+    const userLabel = resolveUser ? resolveUser(ticket.userId) : ticket.userId;
+    const tripLabel = resolveTrip ? resolveTrip(ticket.tripId) : ticket.tripId;
 
     const modal = (
         <div
@@ -99,11 +88,11 @@ const TicketDetailModal = ({ isOpen, onClose, ticket, resolveUser, resolveRoute 
                 <div className="sticky top-0 bg-white border-b border-gray-100 px-5 py-4 rounded-t-2xl z-10 flex items-center justify-between">
                     <div className="flex items-center gap-3 min-w-0">
                         <div className="w-9 h-9 bg-blue-50 border border-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                            <QrCode className="w-4 h-4 text-blue-600" />
+                            <CreditCard className="w-4 h-4 text-blue-600" />
                         </div>
                         <div className="min-w-0">
                             <h2 className="text-sm font-semibold text-gray-900">Détails du ticket</h2>
-                            <p className="text-xs text-gray-400 mt-0.5 truncate">TKT-{shortId(ticketId)}</p>
+                            <p className="text-xs text-gray-400 mt-0.5 truncate">#{ticket.ticketId}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0 ml-3">
@@ -123,7 +112,7 @@ const TicketDetailModal = ({ isOpen, onClose, ticket, resolveUser, resolveRoute 
 
                 <div className="px-5 py-4 space-y-4">
 
-                    {/* Prix + moyen de paiement */}
+                    {/* Prix mis en avant */}
                     <div className="bg-green-50 border border-green-100 rounded-xl p-4 flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
@@ -131,39 +120,38 @@ const TicketDetailModal = ({ isOpen, onClose, ticket, resolveUser, resolveRoute 
                             </div>
                             <div>
                                 <p className="text-[10px] text-green-600">Prix payé</p>
-                                <p className="text-lg font-bold text-green-700">{price} <span className="text-sm font-normal">FCFA</span></p>
+                                <p className="text-lg font-bold text-green-700">{ticket.price} <span className="text-sm font-normal">FCFA</span></p>
                             </div>
                         </div>
-                        {paymentMethod && (
-                            <div className="flex items-center gap-1.5 text-xs text-green-700 bg-white px-2.5 py-1 rounded-full border border-green-100">
-                                <Wallet className="w-3 h-3" />
-                                {paymentMethod}
-                            </div>
-                        )}
+                        <div className={`px-2.5 py-1 rounded-full flex items-center gap-1.5 text-xs font-medium ${statusStyle}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${statusDot}`} />
+                            {statusLabel}
+                        </div>
                     </div>
 
                     {/* Utilisateur */}
                     <div className="bg-gray-50 rounded-xl p-4">
                         <SectionHeader icon={User} title="Utilisateur" />
-                        <Row label="Nom" value={userLabel} />
-                        <Row label="ID ticket" value={`TKT-${shortId(ticketId)}`} />
+                        <Row label="Nom / ID"  value={userLabel} />
+                        <Row label="ID ticket" value={String(ticket.ticketId).slice(0, 8)} />
                     </div>
 
                     {/* Trajet */}
                     <div className="bg-gray-50 rounded-xl p-4">
                         <SectionHeader icon={Route} title="Trajet" iconColor="text-purple-600" />
-                        <Row label="Ligne" value={routeLabel} />
+                        <Row label="Trajet"        value={tripLabel} />
+                        <Row label="Méthode de paiement" value={ticket.paymentMethod} />
                     </div>
 
                     {/* Dates */}
                     <div className="bg-gray-50 rounded-xl p-4">
                         <SectionHeader icon={Calendar} title="Dates" iconColor="text-amber-600" />
                         <div className="space-y-2">
-                            <DateCard icon={Clock} label="Date d'achat"      value={formatDate(purchaseDate)}    bg="bg-blue-50"   iconColor="text-blue-600" />
-                            {usageDate && (
-                                <DateCard icon={Clock} label="Date d'utilisation" value={formatDate(usageDate)}       bg="bg-purple-50" iconColor="text-purple-600" />
+                            <DateCard icon={Calendar} label="Date d'achat"       value={formatDate(ticket.purchaseDate)}   bg="bg-blue-50"   iconColor="text-blue-600" />
+                            {ticket.useDate && (
+                                <DateCard icon={Calendar} label="Date d'utilisation" value={formatDate(ticket.useDate)}       bg="bg-purple-50" iconColor="text-purple-600" />
                             )}
-                            <DateCard icon={Clock} label="Date d'expiration" value={formatDate(expirationDate)}  bg="bg-amber-50"  iconColor="text-amber-600" />
+                            <DateCard icon={Calendar} label="Date d'expiration"  value={formatDate(ticket.expirationDate)} bg="bg-amber-50"  iconColor="text-amber-600" />
                         </div>
                     </div>
 

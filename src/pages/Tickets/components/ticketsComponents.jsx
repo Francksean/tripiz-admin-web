@@ -1,18 +1,10 @@
-import React, { useState } from 'react';
-import { Search, Filter, Eye, Edit, Trash2, Plus, MapPin, QrCode, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
-import TicketDetailModal  from "./DetailsModal.jsx";
-import EditTicketModal    from "./EditModal.jsx";
-import { QRCodeModal }    from "./QRCodeModal.jsx";
-import { AddTicketModal } from "./AddModal.jsx";
-
-// ── Données & helpers hors composant ─────────────────────────────────────────
-const INITIAL_TICKETS = [
-    { ticket_id: 1, ticket_number: 'TKT_20241215_001', user_id: 1, user_name: 'Jean Dupont',  route_id: 1, route_name: 'Douala Central - Bonabéri', departure_station: 'Gare Centrale',          arrival_station: 'Marché Bonabéri',   price_paid: 150, purchase_date: '2024-12-15 14:30:25', usage_date: null,                  expiration_date: '2024-12-16 14:30:25', ticket_status: 'VALIDE',  qr_code: 'eyJ0aWNrZXRfaWQiOjEsInVzZXJfaWQiOjF9' },
-    { ticket_id: 2, ticket_number: 'TRIPIZ_123456789', user_id: 2, user_name: 'Marie Nkomo',  route_id: 2, route_name: 'Akwa - Makepe',             departure_station: 'Rond-point Akwa',        arrival_station: 'Carrefour Makepe',  price_paid: 125, purchase_date: '2024-12-15 08:15:10', usage_date: '2024-12-15 09:00:00', expiration_date: '2024-12-16 08:15:10', ticket_status: 'UTILISE', qr_code: 'eyJ0aWNrZXRfaWQiOjIsInVzZXJfaWQiOjJ9' },
-    { ticket_id: 3, ticket_number: 'TKT_20241214_045', user_id: 3, user_name: 'Paul Mbarga',  route_id: 3, route_name: 'Bassa - Ndokoti',           departure_station: 'Marché Bassa',           arrival_station: 'Station Ndokoti',   price_paid: 175, purchase_date: '2024-12-14 16:20:30', usage_date: null,                  expiration_date: '2024-12-14 23:59:59', ticket_status: 'EXPIRE',  qr_code: 'eyJ0aWNrZXRfaWQiOjMsInVzZXJfaWQiOjN9' },
-    { ticket_id: 4, ticket_number: 'TKT_20241215_032', user_id: 4, user_name: 'Sophie Ewodo', route_id: 4, route_name: 'Bonanjo - Kotto',           departure_station: 'Place du Gouvernement',  arrival_station: 'Marché Kotto',      price_paid: 140, purchase_date: '2024-12-15 11:45:15', usage_date: null,                  expiration_date: '2024-12-16 11:45:15', ticket_status: 'ANNULE',  qr_code: 'eyJ0aWNrZXRfaWQiOjQsInVzZXJfaWQiOjR9' },
-    { ticket_id: 5, ticket_number: 'TKT_20241215_055', user_id: 1, user_name: 'Jean Dupont',  route_id: 1, route_name: 'Douala Central - Bonabéri', departure_station: 'Gare Centrale',          arrival_station: 'Marché Bonabéri',   price_paid: 150, purchase_date: '2024-12-15 17:20:45', usage_date: null,                  expiration_date: '2024-12-16 17:20:45', ticket_status: 'VALIDE',  qr_code: 'eyJ0aWNrZXRfaWQiOjUsInVzZXJfaWQiOjF9' },
-];
+import React, { useEffect, useState } from 'react';
+import { Search, Filter, Eye, MapPin, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import TicketDetailModal from "./DetailsModal.jsx";
+import { trajetService }     from "../../../Services/TrajetService.js";
+import { itineraryService }  from "../../../Services/ItineraireService.js";
+import { userService }       from "../../../Services/UserService.js";
+import {ticketService} from "../../../Services/TicketsService.js";
 
 const STATUS_STYLE = {
     VALIDE:  'bg-green-50 text-green-700',
@@ -37,41 +29,110 @@ const formatDate = (d) => {
     return date.toLocaleDateString('fr-FR') + ' ' + date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 };
 
-// ── Page principale ───────────────────────────────────────────────────────────
 const TicketsPage = () => {
-    const [tickets, setTickets]       = useState(INITIAL_TICKETS);
-    const [searchTerm, setSearchTerm] = useState('');
+    const [tickets, setTickets]           = useState([]);
+    const [loading, setLoading]           = useState(true);
+    const [error, setError]               = useState(null);
+    const [searchTerm, setSearchTerm]     = useState('');
     const [statusFilter, setStatusFilter] = useState('Tous les statuts');
 
-    const [showAddModal, setShowAddModal]       = useState(false);
-    const [showQRModal, setShowQRModal]         = useState(false);
     const [showDetailModal, setShowDetailModal] = useState(false);
-    const [showEditModal, setShowEditModal]     = useState(false);
+    const [selectedTicket, setSelectedTicket]   = useState(null);
 
-    const [selectedTicket, setSelectedTicket] = useState(null);
+    // Maps de résolution : userId → nom, tripId → libellé du trajet
+    const [userMap, setUserMap] = useState({});
+    const [tripMap, setTripMap] = useState({});
 
-    // Handlers
-    const openDetail = (t) => { setSelectedTicket(t); setShowDetailModal(true); };
-    const openEdit   = (t) => { setSelectedTicket(t); setShowEditModal(true); };
-    const openQR     = (t) => { setSelectedTicket(t); setShowQRModal(true); };
-    const handleSave = (t) => setTickets(prev => prev.map(x => x.ticket_id === t.ticket_id ? t : x));
-    const handleAdd  = (t) => setTickets(prev => [...prev, t]);
-    const handleDelete = (id) => { if (window.confirm('Annuler ce ticket ?')) setTickets(prev => prev.filter(t => t.ticket_id !== id)); };
+    useEffect(() => {
+        loadAll();
+    }, []);
 
-    // Stats dynamiques
+    const loadAll = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const [ticketsData, usersData, tripsData, itinerariesData] = await Promise.allSettled([
+                ticketService.getAllTickets(),
+                userService.getAllUsers ? userService.getAllUsers() : Promise.resolve([]),
+                trajetService.getAllTrips(),
+                itineraryService.getAllItineraries(),
+            ]);
+
+            // Map itinéraires (pour résoudre le nom de la ligne depuis un trip)
+            const iMap = {};
+            if (itinerariesData.status === 'fulfilled' && Array.isArray(itinerariesData.value)) {
+                itinerariesData.value.forEach(i => {
+                    const id = i.itinerary_id ?? i.itinaryId ?? i.id;
+                    const label = `${i.itinerary_name || i.itinary_name || '?'} (${i.route_name || ''})`;
+                    if (id !== undefined) iMap[String(id)] = label;
+                });
+            }
+
+            // Map trips → libellé lisible (itinéraire + date/heure)
+            const tMap = {};
+            if (tripsData.status === 'fulfilled' && Array.isArray(tripsData.value)) {
+                tripsData.value.forEach(t => {
+                    const id = t.trip_id ?? t.tripId ?? t.id;
+                    const itiId = t.itinerary_id ?? t.itineraryId;
+                    const itiLabel = iMap[String(itiId)] || 'Itinéraire inconnu';
+                    if (id !== undefined) tMap[String(id)] = itiLabel;
+                });
+            } else if (tripsData.status === 'rejected') {
+                console.error('trajetService.getAllTrips() a échoué:', tripsData.reason);
+            }
+            setTripMap(tMap);
+
+            // Map utilisateurs → nom
+            const uMap = {};
+            if (usersData.status === 'fulfilled' && Array.isArray(usersData.value)) {
+                usersData.value.forEach(u => {
+                    const id = u.userId ?? u.user_id ?? u.id;
+                    const label = [u.firstName, u.lastName].filter(Boolean).join(' ') || u.email || String(id);
+                    if (id !== undefined) uMap[String(id)] = label;
+                });
+            } else if (usersData.status === 'rejected') {
+                console.warn('userService.getAllUsers() a échoué ou n\'existe pas:', usersData.reason);
+            }
+            setUserMap(uMap);
+
+            if (ticketsData.status === 'fulfilled') {
+                setTickets(ticketsData.value);
+                if (ticketsData.value.length > 0) {
+                    console.log('Exemple ticket brut:', ticketsData.value[0]);
+                }
+            } else {
+                setError('Impossible de charger les tickets.');
+            }
+        } catch (err) {
+            console.error(err);
+            setError('Erreur lors du chargement des données.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const resolveUser = (id) => userMap[id] || (id ? `#${String(id).slice(0, 8)}` : '—');
+    const resolveTrip = (id) => tripMap[id] || (id ? `Trajet #${String(id).slice(0, 8)}` : '—');
+
+    const openDetail = (ticket) => { setSelectedTicket(ticket); setShowDetailModal(true); };
+
+    // Stats calculées à partir des données réelles
     const statsCards = [
-        { label: 'Total Tickets',    value: tickets.length,                                            color: 'bg-blue-100 text-blue-600',   icon: '🎫' },
-        { label: 'Tickets Valides',  value: tickets.filter(t => t.ticket_status === 'VALIDE').length,  color: 'bg-green-100 text-green-600',  icon: '✅' },
-        { label: 'Tickets Utilisés', value: tickets.filter(t => t.ticket_status === 'UTILISE').length, color: 'bg-purple-100 text-purple-600', icon: '🚌' },
-        { label: 'Revenus Jour',     value: `${tickets.reduce((s, t) => s + (t.price_paid || 0), 0)} FCFA`, color: 'bg-orange-100 text-orange-600', icon: '💰' },
+        { label: 'Total Tickets',    value: tickets.length,                                                       color: 'bg-blue-100 text-blue-600',    icon: '🎫' },
+        { label: 'Tickets Valides',  value: tickets.filter(t => (t.status || '').toUpperCase() === 'VALIDE').length,   color: 'bg-green-100 text-green-600',  icon: '✅' },
+        { label: 'Tickets Utilisés', value: tickets.filter(t => (t.status || '').toUpperCase() === 'UTILISE').length,  color: 'bg-purple-100 text-purple-600', icon: '🚌' },
+        { label: 'Revenus',          value: `${tickets.reduce((s, t) => s + (Number(t.price) || 0), 0)} FCFA`,     color: 'bg-orange-100 text-orange-600', icon: '💰' },
     ];
 
-    const filtered = tickets.filter(t =>
-        (t.ticket_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            t.user_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            t.route_name.toLowerCase().includes(searchTerm.toLowerCase())) &&
-        (statusFilter === 'Tous les statuts' || t.ticket_status === statusFilter)
-    );
+    const filtered = tickets.filter(t => {
+        const status = (t.status || '').toUpperCase();
+        const userLabel = resolveUser(t.userId).toLowerCase();
+        const tripLabel = resolveTrip(t.tripId).toLowerCase();
+        const q = searchTerm.toLowerCase();
+        const matchSearch = !q || userLabel.includes(q) || tripLabel.includes(q) || String(t.ticketId).toLowerCase().includes(q);
+        const matchStatus = statusFilter === 'Tous les statuts' || status === statusFilter;
+        return matchSearch && matchStatus;
+    });
 
     return (
         <div className="p-3 lg:p-4 bg-gray-50 min-h-screen">
@@ -83,8 +144,15 @@ const TicketsPage = () => {
                         <h1 className="text-xl lg:text-2xl font-bold text-gray-800">Gestion des Tickets</h1>
                         <p className="text-gray-500 mt-1 text-sm">Gérez tous les tickets achetés par les utilisateurs</p>
                     </div>
-
                 </div>
+
+                {/* Erreur */}
+                {error && (
+                    <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm flex justify-between">
+                        <span>{error}</span>
+                        <button onClick={loadAll} className="underline font-medium">Réessayer</button>
+                    </div>
+                )}
 
                 {/* Stats */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
@@ -93,7 +161,9 @@ const TicketsPage = () => {
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-gray-500 text-xs font-medium">{s.label}</p>
-                                    <p className="text-xl font-bold text-gray-800 mt-1">{s.value}</p>
+                                    <p className="text-xl font-bold text-gray-800 mt-1">
+                                        {loading ? <span className="inline-block w-8 h-5 bg-gray-200 rounded animate-pulse" /> : s.value}
+                                    </p>
                                 </div>
                                 <div className={`w-10 h-10 rounded-lg ${s.color} flex items-center justify-center text-lg`}>{s.icon}</div>
                             </div>
@@ -108,7 +178,7 @@ const TicketsPage = () => {
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                             <input
                                 type="text"
-                                placeholder="Rechercher par numéro, utilisateur ou ligne…"
+                                placeholder="Rechercher par utilisateur, trajet ou ID…"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -143,65 +213,78 @@ const TicketsPage = () => {
                             </tr>
                             </thead>
                             <tbody>
-                            {filtered.map((ticket) => (
-                                <tr key={ticket.ticket_id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                                    <td className="py-2.5 px-3">
-                                        <p className="text-xs font-semibold text-gray-800">{ticket.ticket_number}</p>
-                                        <p className="text-xs text-gray-400 mt-0.5">ID: {ticket.ticket_id}</p>
-                                    </td>
-                                    <td className="py-2.5 px-3">
-                                        <p className="text-xs font-medium text-gray-800">{ticket.user_name}</p>
-                                        {/*<p className="text-xs text-gray-400 mt-0.5">User #{ticket.user_id}</p>*/}
-                                    </td>
-                                    <td className="py-2.5 px-3">
-                                        <p className="text-xs font-medium text-gray-800 mb-1">{ticket.route_name}</p>
-                                        <div className="flex items-center gap-1 text-xs text-gray-500">
-                                            <MapPin size={10} className="text-green-500 flex-shrink-0" /> {ticket.departure_station}
-                                        </div>
-                                        <div className="flex items-center gap-1 text-xs text-gray-500 mt-0.5">
-                                            <MapPin size={10} className="text-red-500 flex-shrink-0" /> {ticket.arrival_station}
-                                        </div>
-                                    </td>
-                                    <td className="py-2.5 px-3">
-                                        <span className="text-sm font-bold text-blue-600">{ticket.price_paid}</span>
-                                        <span className="text-xs text-gray-400 ml-1">FCFA</span>
-                                    </td>
-                                    <td className="py-2.5 px-3">
-                                        <div className="space-y-1 text-xs">
-                                            <div>
-                                                <span className="text-gray-400">Achat: </span>
-                                                <span className="text-gray-700">{formatDate(ticket.purchase_date)}</span>
-                                            </div>
-                                            {ticket.usage_date && (
-                                                <div>
-                                                    <span className="text-gray-400">Utilisé: </span>
-                                                    <span className="text-gray-700">{formatDate(ticket.usage_date)}</span>
+                            {loading ? (
+                                [...Array(4)].map((_, i) => (
+                                    <tr key={i} className="border-b border-gray-100">
+                                        {[120, 100, 140, 60, 100, 80, 40].map((w, j) => (
+                                            <td key={j} className="py-2.5 px-3">
+                                                <div className="h-4 bg-gray-200 rounded animate-pulse" style={{ width: w }} />
+                                            </td>
+                                        ))}
+                                    </tr>
+                                ))
+                            ) : (
+                                filtered.map((ticket) => {
+                                    const status = (ticket.status || '').toUpperCase();
+                                    return (
+                                        <tr key={ticket.ticketId} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                                            <td className="py-2.5 px-3">
+                                                <p className="text-xs font-semibold text-gray-800">#{String(ticket.ticketId).slice(0, 8)}</p>
+                                                <p className="text-xs text-gray-400 mt-0.5">{ticket.paymentMethod}</p>
+                                            </td>
+                                            <td className="py-2.5 px-3">
+                                                <p className="text-xs font-medium text-gray-800">{resolveUser(ticket.userId)}</p>
+                                            </td>
+                                            <td className="py-2.5 px-3">
+                                                <p className="text-xs font-medium text-gray-800 flex items-center gap-1">
+                                                    <MapPin size={10} className="text-blue-500 flex-shrink-0" />
+                                                    {resolveTrip(ticket.tripId)}
+                                                </p>
+                                            </td>
+                                            <td className="py-2.5 px-3">
+                                                <span className="text-sm font-bold text-blue-600">{ticket.price}</span>
+                                                <span className="text-xs text-gray-400 ml-1">FCFA</span>
+                                            </td>
+                                            <td className="py-2.5 px-3">
+                                                <div className="space-y-1 text-xs">
+                                                    <div>
+                                                        <span className="text-gray-400">Achat: </span>
+                                                        <span className="text-gray-700">{formatDate(ticket.purchaseDate)}</span>
+                                                    </div>
+                                                    {ticket.useDate && (
+                                                        <div>
+                                                            <span className="text-gray-400">Utilisé: </span>
+                                                            <span className="text-gray-700">{formatDate(ticket.useDate)}</span>
+                                                        </div>
+                                                    )}
+                                                    <div>
+                                                        <span className="text-gray-400">Expire: </span>
+                                                        <span className="text-gray-700">{formatDate(ticket.expirationDate)}</span>
+                                                    </div>
                                                 </div>
-                                            )}
-                                            <div>
-                                                <span className="text-gray-400">Expire: </span>
-                                                <span className="text-gray-700">{formatDate(ticket.expiration_date)}</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="py-2.5 px-3">
-                                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_STYLE[ticket.ticket_status] || 'bg-gray-100 text-gray-600'}`}>
-                                                <StatusIcon status={ticket.ticket_status} />
-                                                {STATUS_LABEL[ticket.ticket_status] || ticket.ticket_status}
-                                            </span>
-                                    </td>
-                                    <td className="py-2.5 px-3">
-                                        <div className="flex items-center gap-1">
-                                            <button onClick={() => openDetail(ticket)} className="p-1.5 text-blue-600  hover:bg-blue-50   rounded transition-colors" title="Détails"><Eye     size={13} /></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
+                                            </td>
+                                            <td className="py-2.5 px-3">
+                                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_STYLE[status] || 'bg-gray-100 text-gray-600'}`}>
+                                                        <StatusIcon status={status} />
+                                                        {STATUS_LABEL[status] || ticket.status}
+                                                    </span>
+                                            </td>
+                                            <td className="py-2.5 px-3">
+                                                <div className="flex items-center gap-1">
+                                                    <button onClick={() => openDetail(ticket)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Détails">
+                                                        <Eye size={13} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            )}
                             </tbody>
                         </table>
                     </div>
 
-                    {filtered.length === 0 && (
+                    {!loading && filtered.length === 0 && (
                         <div className="text-center py-10 text-gray-400">
                             <div className="text-3xl mb-2">🎫</div>
                             <p className="text-sm font-medium">Aucun ticket trouvé</p>
@@ -211,27 +294,12 @@ const TicketsPage = () => {
                 </div>
             </div>
 
-            {/* ── Modaux ── */}
-            <AddTicketModal
-                isOpen={showAddModal}
-                onClose={() => setShowAddModal(false)}
-                onSave={handleAdd}
-            />
-            <QRCodeModal
-                isOpen={showQRModal}
-                onClose={() => setShowQRModal(false)}
-                ticket={selectedTicket}
-            />
             <TicketDetailModal
                 isOpen={showDetailModal}
                 onClose={() => { setShowDetailModal(false); setSelectedTicket(null); }}
                 ticket={selectedTicket}
-            />
-            <EditTicketModal
-                isOpen={showEditModal}
-                onClose={() => { setShowEditModal(false); setSelectedTicket(null); }}
-                ticket={selectedTicket}
-                onSave={handleSave}
+                resolveUser={resolveUser}
+                resolveTrip={resolveTrip}
             />
         </div>
     );
