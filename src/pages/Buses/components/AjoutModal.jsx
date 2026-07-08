@@ -288,9 +288,8 @@ export const ModalAjout = ({ activeTab, showAddModal, setShowAddModal, modalMode
                                             onChange={(e) => handleInputChange('stationStatus', e.target.value)}
                                             className={getInputCls(false)}
                                         >
-                                            <option value="ACTIVE">Actif</option>
-                                            <option value="MAINTENANCE">Maintenance</option>
-                                            <option value="INACTIVE">Inactif</option>
+                                            <option value="En service">En service</option>
+                                            <option value="En maintenance">En Maintenance</option>
                                         </select>
                                     </Field>
                                 </div>

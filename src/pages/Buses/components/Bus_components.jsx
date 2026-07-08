@@ -215,9 +215,9 @@ const BusStationsPage = () => {
         const statusMap = {
             'En service': 'bg-green-100 text-green-700',
             'En maintenance': 'bg-orange-100 text-orange-700',
-            'ACTIVE': 'bg-green-100 text-green-700',
-            'INACTIVE': 'bg-red-100 text-red-700',
-            'MAINTENANCE': 'bg-orange-100 text-orange-700'
+            // 'ACTIVE': 'bg-green-100 text-green-700',
+            // 'INACTIVE': 'bg-red-100 text-red-700',
+            // 'MAINTENANCE': 'bg-orange-100 text-orange-700'
         };
 
         return `${statusMap[status] || 'bg-gray-100 text-gray-700'} px-2 py-1 rounded-full text-xs font-medium`;
@@ -227,9 +227,9 @@ const BusStationsPage = () => {
         const statusLabels = {
             'En service': 'En service',
             'En maintenance': 'En maintenance',
-            'ACTIVE': 'Actif',
-            'INACTIVE': 'Inactif',
-            'MAINTENANCE': 'Maintenance'
+            // 'ACTIVE': 'Actif',
+            // 'INACTIVE': 'Inactif',
+            // 'MAINTENANCE': 'Maintenance'
         };
         return statusLabels[status] || status;
     };
@@ -346,9 +346,8 @@ const BusStationsPage = () => {
                                     </>
                                 ) : (
                                     <>
-                                        <option value="ACTIVE">Actif</option>
-                                        <option value="MAINTENANCE">En Maintenance</option>
-                                        <option value="INACTIVE">Inactif</option>
+                                        <option value="En service">En service</option>
+                                        <option value="En maintenance">En Maintenance</option>
                                     </>
                                 )}
                             </select>
