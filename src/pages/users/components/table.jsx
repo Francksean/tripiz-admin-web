@@ -1,6 +1,5 @@
 import { Mail, Phone, User, Users, UserX, UserCheck, Trash2 } from "lucide-react";
 
-// ── Helpers hors composant ────────────────────────────────────────────────────
 const STATUS_CFG = {
     ONLINE:  { cls: 'bg-green-50 text-green-700',  label: 'En ligne'    },
     OFFLINE: { cls: 'bg-amber-50 text-amber-700',  label: 'Hors ligne'  },
@@ -14,12 +13,69 @@ const ROLE_CFG = {
     user:   { cls: 'bg-gray-100 text-gray-600',    label: 'Utilisateur' },
 };
 
+const TABLE_HEADERS = ['Utilisateur', 'Contact', 'Rôle', 'Statut', 'Actions'];
+
 const getUserName = (u) =>
     (u.firstName || u.lastName)
         ? `${u.firstName || ''} ${u.lastName || ''}`.trim()
         : (u.name || '—');
 
-// ── Composant ─────────────────────────────────────────────────────────────────
+// Squelette de chargement, mêmes colonnes/largeurs que UserTable, pour que rien ne "saute"
+// à l'affichage des vraies données.
+export const UserTableSkeleton = ({ rows = 5 }) => (
+    <div className="overflow-x-auto">
+        <table className="w-full min-w-[560px]">
+            <thead className="bg-gray-50 border-b border-gray-200">
+            <tr>
+                {TABLE_HEADERS.map((h, i) => (
+                    <th key={h} className={`px-4 py-3 text-left text-xs font-semibold text-gray-600 ${i === 1 ? 'hidden md:table-cell' : ''}`}>
+                        {h}
+                    </th>
+                ))}
+            </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+            {[...Array(rows)].map((_, i) => (
+                <tr key={i}>
+                    {/* Utilisateur */}
+                    <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse flex-shrink-0" />
+                            <div className="min-w-0 space-y-1.5">
+                                <div className="h-3 bg-gray-200 rounded animate-pulse" style={{ width: 120 }} />
+                                <div className="h-2.5 bg-gray-100 rounded animate-pulse md:hidden" style={{ width: 90 }} />
+                            </div>
+                        </div>
+                    </td>
+                    {/* Contact */}
+                    <td className="px-4 py-3 hidden md:table-cell">
+                        <div className="space-y-1.5">
+                            <div className="h-2.5 bg-gray-200 rounded animate-pulse" style={{ width: 160 }} />
+                            <div className="h-2.5 bg-gray-100 rounded animate-pulse" style={{ width: 100 }} />
+                        </div>
+                    </td>
+                    {/* Rôle */}
+                    <td className="px-4 py-3">
+                        <div className="h-5 bg-gray-200 rounded-full animate-pulse" style={{ width: 70 }} />
+                    </td>
+                    {/* Statut */}
+                    <td className="px-4 py-3">
+                        <div className="h-5 bg-gray-200 rounded-full animate-pulse" style={{ width: 70 }} />
+                    </td>
+                    {/* Actions */}
+                    <td className="px-4 py-3">
+                        <div className="flex items-center gap-1">
+                            <div className="w-6 h-6 bg-gray-200 rounded-lg animate-pulse" />
+                            <div className="w-6 h-6 bg-gray-100 rounded-lg animate-pulse" />
+                        </div>
+                    </td>
+                </tr>
+            ))}
+            </tbody>
+        </table>
+    </div>
+);
+
 export const UserTable = ({ users, onDelete, onToggleStatus }) => {
     if (!users.length) return null;
 
@@ -28,7 +84,7 @@ export const UserTable = ({ users, onDelete, onToggleStatus }) => {
             <table className="w-full min-w-[560px]">
                 <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                    {['Utilisateur', 'Contact', 'Rôle', 'Statut', 'Actions'].map((h, i) => (
+                    {TABLE_HEADERS.map((h, i) => (
                         <th key={h} className={`px-4 py-3 text-left text-xs font-semibold text-gray-600 ${i === 1 ? 'hidden md:table-cell' : ''}`}>
                             {h}
                         </th>

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Edit, Trash2, MapPin, Users, Filter, Eye, Bus, Navigation, AlertTriangle, CheckCircle, MapPinned } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, MapPin, Users, Filter, Eye, Bus, MapPinHouse, AlertTriangle, CheckCircle, MapPinned } from 'lucide-react';
 import {ModalAjout} from "./AjoutModal.jsx";
 import {ModalDetails} from "./Detail_modal.jsx";
 import {stationService} from "../../../Services/StationService.js";
 import {busService} from "../../../Services/BusService.js";
 
-// ── Charte TRIPIZ (cohérente avec StatisticsPage.jsx) ───────────────────────
+
 const BRAND = {
     blue:      '#3A68C4',
     lightBlue: '#498BD2',
@@ -13,7 +13,6 @@ const BRAND = {
 };
 const GRADIENT = `linear-gradient(135deg, ${BRAND.blue} 0%, ${BRAND.lightBlue} 100%)`;
 
-// ── Carte de statistique (même style que StatisticsPage.jsx) ────────────────
 const StatCard = ({ label, value, Icon, accent, loading }) => (
     <div className="relative bg-white rounded-2xl p-5 shadow-sm border border-gray-100 overflow-hidden
         transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
@@ -216,9 +215,9 @@ const BusStationsPage = () => {
         const statusMap = {
             'En service': 'bg-green-100 text-green-700',
             'En maintenance': 'bg-orange-100 text-orange-700',
-            'ACTIVE': 'bg-green-100 text-green-700',
-            'INACTIVE': 'bg-red-100 text-red-700',
-            'MAINTENANCE': 'bg-orange-100 text-orange-700'
+            // 'ACTIVE': 'bg-green-100 text-green-700',
+            // 'INACTIVE': 'bg-red-100 text-red-700',
+            // 'MAINTENANCE': 'bg-orange-100 text-orange-700'
         };
 
         return `${statusMap[status] || 'bg-gray-100 text-gray-700'} px-2 py-1 rounded-full text-xs font-medium`;
@@ -228,9 +227,9 @@ const BusStationsPage = () => {
         const statusLabels = {
             'En service': 'En service',
             'En maintenance': 'En maintenance',
-            'ACTIVE': 'Actif',
-            'INACTIVE': 'Inactif',
-            'MAINTENANCE': 'Maintenance'
+            // 'ACTIVE': 'Actif',
+            // 'INACTIVE': 'Inactif',
+            // 'MAINTENANCE': 'Maintenance'
         };
         return statusLabels[status] || status;
     };
@@ -306,7 +305,7 @@ const BusStationsPage = () => {
                             className="flex items-center px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 disabled:opacity-50"
                             style={activeTab === 'stations' ? { background: GRADIENT, color: '#fff' } : { color: '#6B7280' }}
                         >
-                            <Navigation className="w-4 h-4 mr-2" />
+                            <MapPinHouse className="w-4 h-4 mr-2" />
                             Stations
                         </button>
                     </div>
@@ -347,9 +346,8 @@ const BusStationsPage = () => {
                                     </>
                                 ) : (
                                     <>
-                                        <option value="ACTIVE">Actif</option>
-                                        <option value="MAINTENANCE">En Maintenance</option>
-                                        <option value="INACTIVE">Inactif</option>
+                                        <option value="En service">En service</option>
+                                        <option value="En maintenance">En Maintenance</option>
                                     </>
                                 )}
                             </select>
@@ -359,147 +357,151 @@ const BusStationsPage = () => {
 
                 {/* Liste des bus/stations */}
                 <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-                    {loading && (
-                        <div className="flex items-center justify-center py-8">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: BRAND.blue }}></div>
-                            <span className="ml-2 text-gray-600">Chargement...</span>
-                        </div>
-                    )}
-
-                    {!loading && (
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead className="bg-gray-50 border-b border-gray-200">
-                                <tr>
-                                    {activeTab === 'bus' ? (
-                                        <>
-                                            <th className="text-left py-2 px-3 font-semibold text-gray-700 text-sm">Bus</th>
-                                            <th className="text-left py-2 px-3 font-semibold text-gray-700 text-sm">Capacité</th>
-                                            <th className="text-left py-2 px-3 font-semibold text-gray-700 text-sm">Statut</th>
-                                            <th className="text-left py-2 px-3 font-semibold text-gray-700 text-sm">Actions</th>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <th className="text-left py-2 px-3 font-semibold text-gray-700 text-sm">Station</th>
-                                            <th className="text-left py-2 px-3 font-semibold text-gray-700 text-sm">Adresse</th>
-                                            <th className="text-left py-2 px-3 font-semibold text-gray-700 text-sm">Type</th>
-                                            <th className="text-left py-2 px-3 font-semibold text-gray-700 text-sm">Coordonnées</th>
-                                            <th className="text-left py-2 px-3 font-semibold text-gray-700 text-sm">Statut</th>
-                                            <th className="text-left py-2 px-3 font-semibold text-gray-700 text-sm">Actions</th>
-                                        </>
-                                    )}
-                                </tr>
-                                </thead>
-                                <tbody>
-                                {filteredData.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={activeTab === 'bus' ? 4 : 6} className="text-center py-8 text-gray-500">
-                                            Aucun {activeTab === 'bus' ? 'bus' : 'station'} trouvé
-                                        </td>
-                                    </tr>
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            <thead className="bg-gray-50 border-b border-gray-200">
+                            <tr>
+                                {activeTab === 'bus' ? (
+                                    <>
+                                        <th className="text-left py-2 px-3 font-semibold text-gray-700 text-sm">Bus</th>
+                                        <th className="text-left py-2 px-3 font-semibold text-gray-700 text-sm">Capacité</th>
+                                        <th className="text-left py-2 px-3 font-semibold text-gray-700 text-sm">Statut</th>
+                                        <th className="text-left py-2 px-3 font-semibold text-gray-700 text-sm">Actions</th>
+                                    </>
                                 ) : (
-                                    filteredData.map((item) => (
-                                        <tr key={activeTab === 'bus' ? (item.id || item.busId) : (item.id || item.stationId)}
-                                            className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                                            {activeTab === 'bus' ? (
-                                                <>
-                                                    <td className="py-2 px-3">
-                                                        <div>
-                                                            <div className="font-semibold text-blue-600 text-sm">
-                                                                {item.bus_number || item.busNumber}
-                                                            </div>
-                                                            <div className="text-xs text-gray-500">
-                                                                {item.immatriculation || item.matriculation || 'N/A'}
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td className="py-2 px-3">
-                                                        <div className="space-y-1">
-                                                            <div className="text-sm font-medium text-gray-700">
-                                                                {item.capacity} places
-                                                            </div>
-                                                            <div className="flex items-center gap-1 text-xs">
-                                                                <Users size={12} className="text-gray-400"/>
-                                                                <span className="text-gray-700">{item.capacity}/{item.capacity}</span>
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td className="py-2 px-3">
-                                                        <span className={getStatusBadge(item.status)}>
-                                                            {getStatusLabel(item.status)}
-                                                        </span>
-                                                    </td>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <td className="py-2 px-3">
-                                                        <div>
-                                                            <div className="font-semibold text-blue-600 text-sm">
-                                                                {item.stationName || item.stationName}
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td className="py-2 px-3">
-                                                        <div className="text-sm text-gray-700">{item.address}</div>
-                                                    </td>
-                                                    <td className="py-2 px-3">
-                                                        <div className="text-sm text-gray-700">
-                                                            {getStationTypeLabel(item.stationType || item.stationType)}
-                                                        </div>
-                                                    </td>
-                                                    <td className="py-2 px-3">
-                                                        <div className="flex items-center gap-1 text-xs">
-                                                            <MapPin size={12} className="text-gray-400"/>
-                                                            <span className="text-gray-700">{item.latitude}</span>
-                                                        </div>
-                                                        <div className="flex items-center gap-1 text-xs">
-                                                            <MapPin size={12} className="text-gray-400"/>
-                                                            <span className="text-gray-700">{item.longitude}</span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="py-2 px-3">
-                                                        <span className={getStatusBadge(item.status)}>
-                                                            {getStatusLabel(item.status)}
-                                                        </span>
-                                                    </td>
-                                                </>
-                                            )}
-                                            <td className="py-2 px-3">
-                                                <div className="flex items-center gap-1">
-                                                    <button
-                                                        className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                                                        title="Voir"
-                                                        onClick={() => handleShowDetails(item)}
-                                                    >
-                                                        <Eye size={14}/>
-                                                    </button>
-                                                    <button
-                                                        className="p-1 text-gray-600 hover:bg-gray-50 rounded transition-colors"
-                                                        title="Modifier"
-                                                        onClick={() => {
-                                                            setModalMode('edit');
-                                                            setEditingItem(item);
-                                                            setShowAddModal(true);
-                                                        }}
-                                                    >
-                                                        <Edit size={14}/>
-                                                    </button>
-                                                    <button
-                                                        className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
-                                                        title="Supprimer"
-                                                        onClick={() => handleDelete(item)}
-                                                    >
-                                                        <Trash2 size={14}/>
-                                                    </button>
+                                    <>
+                                        <th className="text-left py-2 px-3 font-semibold text-gray-700 text-sm">Station</th>
+                                        <th className="text-left py-2 px-3 font-semibold text-gray-700 text-sm">Adresse</th>
+                                        <th className="text-left py-2 px-3 font-semibold text-gray-700 text-sm">Type</th>
+                                        <th className="text-left py-2 px-3 font-semibold text-gray-700 text-sm">Coordonnées</th>
+                                        <th className="text-left py-2 px-3 font-semibold text-gray-700 text-sm">Statut</th>
+                                        <th className="text-left py-2 px-3 font-semibold text-gray-700 text-sm">Actions</th>
+                                    </>
+                                )}
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {loading ? (
+                                [...Array(4)].map((_, i) => (
+                                    <tr key={i} className="border-b border-gray-100">
+                                        {(activeTab === 'bus' ? [1, 2, 3, 4] : [1, 2, 3, 4, 5, 6]).map((_, j) => (
+                                            <td key={j} className="py-3 px-3">
+                                                <div className="space-y-2">
+                                                    <div className="h-3 bg-gray-200 rounded animate-pulse w-24" />
+                                                    <div className="h-3 bg-gray-100 rounded animate-pulse w-16" />
                                                 </div>
                                             </td>
-                                        </tr>
-                                    ))
-                                )}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
+                                        ))}
+                                    </tr>
+                                ))
+                            ) : filteredData.length === 0 ? (
+                                <tr>
+                                    <td colSpan={activeTab === 'bus' ? 4 : 6} className="text-center py-8 text-gray-500">
+                                        Aucun {activeTab === 'bus' ? 'bus' : 'station'} trouvé
+                                    </td>
+                                </tr>
+                            ) : (
+                                filteredData.map((item) => (
+                                    <tr key={activeTab === 'bus' ? (item.id || item.busId) : (item.id || item.stationId)}
+                                        className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                                        {activeTab === 'bus' ? (
+                                            <>
+                                                <td className="py-2 px-3">
+                                                    <div>
+                                                        <div className="font-semibold text-blue-600 text-sm">
+                                                            {item.bus_number || item.busNumber}
+                                                        </div>
+                                                        <div className="text-xs text-gray-500">
+                                                            {item.immatriculation || item.matriculation || 'N/A'}
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="py-2 px-3">
+                                                    <div className="space-y-1">
+                                                        <div className="text-sm font-medium text-gray-700">
+                                                            {item.capacity} places
+                                                        </div>
+                                                        <div className="flex items-center gap-1 text-xs">
+                                                            <Users size={12} className="text-gray-400"/>
+                                                            <span className="text-gray-700">{item.capacity}/{item.capacity}</span>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="py-2 px-3">
+                                                    <span className={getStatusBadge(item.status)}>
+                                                        {getStatusLabel(item.status)}
+                                                    </span>
+                                                </td>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <td className="py-2 px-3">
+                                                    <div>
+                                                        <div className="font-semibold text-blue-600 text-sm">
+                                                            {item.stationName || item.stationName}
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="py-2 px-3">
+                                                    <div className="text-sm text-gray-700">{item.address}</div>
+                                                </td>
+                                                <td className="py-2 px-3">
+                                                    <div className="text-sm text-gray-700">
+                                                        {getStationTypeLabel(item.stationType || item.stationType)}
+                                                    </div>
+                                                </td>
+                                                <td className="py-2 px-3">
+                                                    <div className="flex items-center gap-1 text-xs">
+                                                        <MapPin size={12} className="text-gray-400"/>
+                                                        <span className="text-gray-700">{item.latitude}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1 text-xs">
+                                                        <MapPin size={12} className="text-gray-400"/>
+                                                        <span className="text-gray-700">{item.longitude}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="py-2 px-3">
+                                                    <span className={getStatusBadge(item.status)}>
+                                                        {getStatusLabel(item.status)}
+                                                    </span>
+                                                </td>
+                                            </>
+                                        )}
+                                        <td className="py-2 px-3">
+                                            <div className="flex items-center gap-1">
+                                                <button
+                                                    className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                                    title="Voir"
+                                                    onClick={() => handleShowDetails(item)}
+                                                >
+                                                    <Eye size={14}/>
+                                                </button>
+                                                <button
+                                                    className="p-1 text-gray-600 hover:bg-gray-50 rounded transition-colors"
+                                                    title="Modifier"
+                                                    onClick={() => {
+                                                        setModalMode('edit');
+                                                        setEditingItem(item);
+                                                        setShowAddModal(true);
+                                                    }}
+                                                >
+                                                    <Edit size={14}/>
+                                                </button>
+                                                <button
+                                                    className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
+                                                    title="Supprimer"
+                                                    onClick={() => handleDelete(item)}
+                                                >
+                                                    <Trash2 size={14}/>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 

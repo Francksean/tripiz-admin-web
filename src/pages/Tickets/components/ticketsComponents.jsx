@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Search, Filter, Eye, MapPin, CheckCircle, XCircle, AlertCircle, Ticket, Bus, Wallet } from 'lucide-react';
+import { Search, Filter, Eye, MapPin, CheckCircle, XCircle, AlertCircle, Ticket, TicketX, TicketMinus, TicketCheck, Wallet, Calendar, X } from 'lucide-react';
 import TicketDetailModal from "./DetailsModal.jsx";
 import { trajetService }     from "../../../Services/TrajetService.js";
 import { itineraryService }  from "../../../Services/ItineraireService.js";
@@ -37,6 +37,17 @@ const formatDate = (d) => {
     return date.toLocaleDateString('fr-FR') + ' ' + date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 };
 
+// Convertit une date (Date | string) en clé "YYYY-MM-DD" locale, pour comparer avec un <input type="date">
+const toDateKey = (d) => {
+    if (!d) return null;
+    const date = new Date(d);
+    if (Number.isNaN(date.getTime())) return null;
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+};
+
 // ── Carte de statistique (même style que StatisticsPage.jsx) ────────────────
 const StatCard = ({ label, value, Icon, accent, loading }) => (
     <div className="relative bg-white rounded-2xl p-5 shadow-sm border border-gray-100 overflow-hidden
@@ -65,6 +76,10 @@ const TicketsPage = () => {
     const [error, setError]               = useState(null);
     const [searchTerm, setSearchTerm]     = useState('');
     const [statusFilter, setStatusFilter] = useState('Tous les statuts');
+
+    // Filtre par plage de dates (sur la date d'achat)
+    const [dateFrom, setDateFrom] = useState('');
+    const [dateTo, setDateTo]     = useState('');
 
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [selectedTicket, setSelectedTicket]   = useState(null);
@@ -142,14 +157,16 @@ const TicketsPage = () => {
 
     const openDetail = (ticket) => { setSelectedTicket(ticket); setShowDetailModal(true); };
 
+    const resetDateFilter = () => { setDateFrom(''); setDateTo(''); };
+
     // Stats calculées à partir des données réelles
     const statsCards = [
         { label: 'Total Tickets',    value: tickets.length,
             Icon: Ticket, accent: { bar: GRADIENT, bg: `${BRAND.blue}14`, icon: BRAND.blue } },
         { label: 'Tickets Valides',  value: tickets.filter(t => (t.status || '').toUpperCase() === 'VALIDE').length,
-            Icon: CheckCircle, accent: { bar: 'linear-gradient(135deg, #16A34A, #4ADE80)', bg: '#16A34A14', icon: '#16A34A' } },
+            Icon: TicketCheck, accent: { bar: 'linear-gradient(135deg, #16A34A, #4ADE80)', bg: '#16A34A14', icon: '#16A34A' } },
         { label: 'Tickets Utilisés', value: tickets.filter(t => (t.status || '').toUpperCase() === 'UTILISE').length,
-            Icon: Bus, accent: { bar: 'linear-gradient(135deg, #8B5CF6, #A78BFA)', bg: '#8B5CF614', icon: '#8B5CF6' } },
+            Icon: TicketMinus, accent: { bar: 'linear-gradient(135deg, #8B5CF6, #A78BFA)', bg: '#8B5CF614', icon: '#8B5CF6' } },
         { label: 'Revenus',          value: `${tickets.reduce((s, t) => s + (Number(t.price) || 0), 0)} FCFA`,
             Icon: Wallet, accent: { bar: 'linear-gradient(135deg, #F59E0B, #FBBF24)', bg: '#F59E0B14', icon: '#F59E0B' } },
     ];
@@ -161,8 +178,16 @@ const TicketsPage = () => {
         const q = searchTerm.toLowerCase();
         const matchSearch = !q || userLabel.includes(q) || tripLabel.includes(q) || String(t.ticketId).toLowerCase().includes(q);
         const matchStatus = statusFilter === 'Tous les statuts' || status === statusFilter;
-        return matchSearch && matchStatus;
+
+        // Filtre par date d'achat (bornes incluses, comparaison sur la date locale seule)
+        const purchaseKey = toDateKey(t.purchaseDate);
+        const matchDateFrom = !dateFrom || (purchaseKey && purchaseKey >= dateFrom);
+        const matchDateTo = !dateTo || (purchaseKey && purchaseKey <= dateTo);
+
+        return matchSearch && matchStatus && matchDateFrom && matchDateTo;
     });
+
+    const hasDateFilter = Boolean(dateFrom || dateTo);
 
     return (
         <div className="p-3 lg:p-4 bg-gray-50 min-h-screen">
@@ -209,6 +234,7 @@ const TicketsPage = () => {
                                 className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
                         </div>
+
                         <div className="flex items-center gap-2">
                             <Filter size={16} className="text-gray-400" />
                             <select
@@ -222,6 +248,37 @@ const TicketsPage = () => {
                                 <option value="EXPIRE">Expiré</option>
                                 <option value="ANNULE">Annulé</option>
                             </select>
+                        </div>
+
+                        {/* Filtre par plage de dates (date d'achat) */}
+                        <div className="flex items-center gap-2">
+                            <Calendar size={16} className="text-gray-400 flex-shrink-0" />
+                            <input
+                                type="date"
+                                value={dateFrom}
+                                max={dateTo || undefined}
+                                onChange={(e) => setDateFrom(e.target.value)}
+                                className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                aria-label="Date de début"
+                            />
+                            <span className="text-gray-400 text-sm">→</span>
+                            <input
+                                type="date"
+                                value={dateTo}
+                                min={dateFrom || undefined}
+                                onChange={(e) => setDateTo(e.target.value)}
+                                className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                aria-label="Date de fin"
+                            />
+                            {hasDateFilter && (
+                                <button
+                                    onClick={resetDateFilter}
+                                    title="Réinitialiser les dates"
+                                    className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
+                                >
+                                    <X size={15} />
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -311,7 +368,7 @@ const TicketsPage = () => {
 
                     {!loading && filtered.length === 0 && (
                         <div className="text-center py-10 text-gray-400">
-                            <Ticket size={36} className="mx-auto mb-3 opacity-30" />
+                            <TicketX size={36} className="mx-auto mb-3 opacity-30" />
                             <p className="text-sm font-medium">Aucun ticket trouvé</p>
                             <p className="text-xs mt-1">Essayez de modifier vos critères de recherche</p>
                         </div>

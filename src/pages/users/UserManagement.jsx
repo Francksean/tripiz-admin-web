@@ -1,10 +1,18 @@
-import {Filter, Plus, Search, RefreshCw, X, Users} from "lucide-react";
+import {Plus, Search, Users} from "lucide-react";
 import TripizSidebar from "../components/sidebar.jsx";
 import React, {useEffect, useState} from "react";
 import {StatsCards} from "./components/stats.jsx";
-import {UserTable} from "./components/table.jsx";
+import {UserTable, UserTableSkeleton} from "./components/table.jsx";
+import {UserFilters} from "./components/filters.jsx";
 import {UserModal} from "./Forms/users.jsx";
 import {userService} from "../../Services/UserService.js";
+
+const BRAND = {
+    blue:      '#3A68C4',
+    lightBlue: '#498BD2',
+    dark:      '#2C2C2C',
+};
+const GRADIENT = `linear-gradient(135deg, ${BRAND.blue} 0%, ${BRAND.lightBlue} 100%)`;
 
 const TripizUserManagement = () => {
     const [users, setUsers] = useState([]);
@@ -133,25 +141,20 @@ const TripizUserManagement = () => {
 
     const handleSaveUser = async (userData) => {
         try {
-            // 1. On prépare les données (conversion si le backend attend du snake_case)
             const payload = {
                 email: userData.email,
                 password: userData.password,
-                firstName: userData.firstName, // Laissez en camelCase selon votre Swagger, ou passez en first_name si nécessaire
+                firstName: userData.firstName,
                 lastName: userData.lastName,
                 phone: userData.phone
             };
 
-            // 2. Appel API
             const newDriver = await userService.signupAsDriver(payload);
 
-            // 3. Rechargement global des données de la liste depuis le serveur
             await loadData();
 
-            // 4. Si le rechargement n'inclut pas instantanément le chauffeur, on l'ajoute manuellement
             if (newDriver) {
                 setUsers(prevUsers => {
-                    // Évite les doublons si loadData() l'a déjà récupéré
                     const exists = prevUsers.some(u => u.email === newDriver.email);
                     return exists ? prevUsers : [...prevUsers, newDriver];
                 });
@@ -163,8 +166,6 @@ const TripizUserManagement = () => {
             alert(`Erreur lors de la création du chauffeur : ${error.message}`);
         }
     };
-
-    const selectCls = "px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white";
 
     return (
         <div className="h-screen flex bg-gradient-to-br from-gray-50 to-blue-50 overflow-hidden">
@@ -185,16 +186,21 @@ const TripizUserManagement = () => {
 
                     {/* Header */}
                     <div className="mb-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                        <div>
-                            <h1 className="text-xl lg:text-2xl font-bold text-gray-800">Gestion des Utilisateurs</h1>
-                            <p className="text-gray-500 mt-1 text-sm">Gérez les utilisateurs de votre plateforme</p>
+                        <div className="flex items-center gap-3">
+                            <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: GRADIENT }}>
+                                <Users className="w-5 h-5 text-white" />
+                            </div>
+                            <div>
+                                <h1 className="text-xl lg:text-2xl font-bold" style={{ color: BRAND.dark }}>Gestion des Utilisateurs</h1>
+                                <p className="text-gray-500 mt-0.5 text-sm">Gérez les utilisateurs de votre plateforme</p>
+                            </div>
                         </div>
                         <button
                             onClick={handleCreateUser}
                             disabled={loading}
-                            className="flex items-center px-4 sm:px-5 py-3 text-sm bg-gradient-to-r from-blue-600 to-blue-700
-                                text-white font-medium rounded-xl hover:scale-105 transition-all shadow-lg hover:shadow-xl
+                            className="flex items-center px-4 sm:px-5 py-3 text-sm text-white font-medium rounded-xl hover:scale-105 transition-all shadow-lg hover:shadow-xl
                                 w-fit disabled:opacity-50 disabled:cursor-not-allowed"
+                            style={{ background: GRADIENT }}
                         >
                             <Plus className="w-4 h-4 mr-2"/> Nouveau Chauffeur
                         </button>
@@ -215,51 +221,25 @@ const TripizUserManagement = () => {
                     )}
 
                     {/* Stats Cards - toujours affichées */}
-                    <StatsCards users={users} stats={stats}/>
+                    <StatsCards stats={stats} loading={loading}/>
 
-                    {/* Filtres — visibles seulement si des utilisateurs existent */}
-                    {!loading && users.length > 0 && (
-                        <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-100 mb-4">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4"/>
-                                    <input
-                                        type="text"
-                                        placeholder="Rechercher par nom ou email…"
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    />
-                                </div>
-                                <select value={filterRole} onChange={(e) => setFilterRole(e.target.value)}
-                                        className={selectCls}>
-                                    <option value="all">Tous les rôles</option>
-                                    <option value="admin">Administrateur</option>
-                                    <option value="driver">Chauffeur</option>
-                                    <option value="client">Client</option>
-                                </select>
-                                <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
-                                        className={selectCls}>
-                                    <option value="all">Tous les statuts</option>
-                                    <option value="ONLINE">En ligne</option>
-                                    <option value="OFFLINE">Déconnecté</option>
-                                    <option value="BLOCKED">Bloqué</option>
-                                </select>
-                            </div>
-                        </div>
-                    )}
+                    {/* Filtres — composant séparé, toujours affiché (statique), indépendant du loading de la table,
+                        exactement comme sur TicketsPage / BusStationsPage. */}
+                    <UserFilters
+                        searchTerm={searchTerm}
+                        onSearchChange={setSearchTerm}
+                        filterRole={filterRole}
+                        onFilterRoleChange={setFilterRole}
+                        filterStatus={filterStatus}
+                        onFilterStatusChange={setFilterStatus}
+                    />
 
                     {/* Tableau / états alternatifs */}
                     <div
                         className="bg-white rounded-xl xl:rounded-2xl border border-gray-200 overflow-hidden shadow-lg">
 
-                        {/* Spinner inline pendant le chargement */}
-                        {loading && (
-                            <div className="flex items-center justify-center py-8">
-                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                                <span className="ml-2 text-gray-600">Chargement...</span>
-                            </div>
-                        )}
+                        {/* Squelette de tableau pendant le chargement — mêmes colonnes que UserTable */}
+                        {loading && <UserTableSkeleton/>}
 
                         {/* Aucun utilisateur */}
                         {!loading && users.length === 0 && !error && (
@@ -274,7 +254,8 @@ const TripizUserManagement = () => {
                                 </p>
                                 <button
                                     onClick={handleCreateUser}
-                                    className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-xl hover:scale-105 transition-all shadow-lg hover:shadow-xl"
+                                    className="inline-flex items-center px-6 py-3 text-white font-medium rounded-xl hover:scale-105 transition-all shadow-lg hover:shadow-xl"
+                                    style={{ background: GRADIENT }}
                                 >
                                     <Plus className="w-4 h-4 mr-2"/>
                                     Créer le premier chauffeur
