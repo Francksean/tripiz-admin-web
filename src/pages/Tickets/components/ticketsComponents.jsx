@@ -6,7 +6,6 @@ import { itineraryService }  from "../../../Services/ItineraireService.js";
 import { userService }       from "../../../Services/UserService.js";
 import {ticketService} from "../../../Services/TicketsService.js";
 
-// ── Charte TRIPIZ (cohérente avec StatisticsPage.jsx) ───────────────────────
 const BRAND = {
     blue:      '#3A68C4',
     lightBlue: '#498BD2',
@@ -37,7 +36,6 @@ const formatDate = (d) => {
     return date.toLocaleDateString('fr-FR') + ' ' + date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 };
 
-// Convertit une date (Date | string) en clé "YYYY-MM-DD" locale, pour comparer avec un <input type="date">
 const toDateKey = (d) => {
     if (!d) return null;
     const date = new Date(d);
@@ -48,7 +46,6 @@ const toDateKey = (d) => {
     return `${y}-${m}-${day}`;
 };
 
-// ── Carte de statistique (même style que StatisticsPage.jsx) ────────────────
 const StatCard = ({ label, value, Icon, accent, loading }) => (
     <div className="relative bg-white rounded-2xl p-5 shadow-sm border border-gray-100 overflow-hidden
         transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
@@ -77,7 +74,6 @@ const TicketsPage = () => {
     const [searchTerm, setSearchTerm]     = useState('');
     const [statusFilter, setStatusFilter] = useState('Tous les statuts');
 
-    // Filtre par plage de dates (sur la date d'achat)
     const [dateFrom, setDateFrom] = useState('');
     const [dateTo, setDateTo]     = useState('');
 
@@ -159,7 +155,6 @@ const TicketsPage = () => {
 
     const resetDateFilter = () => { setDateFrom(''); setDateTo(''); };
 
-    // Stats calculées à partir des données réelles
     const statsCards = [
         { label: 'Total Tickets',    value: tickets.length,
             Icon: Ticket, accent: { bar: GRADIENT, bg: `${BRAND.blue}14`, icon: BRAND.blue } },
@@ -179,7 +174,6 @@ const TicketsPage = () => {
         const matchSearch = !q || userLabel.includes(q) || tripLabel.includes(q) || String(t.ticketId).toLowerCase().includes(q);
         const matchStatus = statusFilter === 'Tous les statuts' || status === statusFilter;
 
-        // Filtre par date d'achat (bornes incluses, comparaison sur la date locale seule)
         const purchaseKey = toDateKey(t.purchaseDate);
         const matchDateFrom = !dateFrom || (purchaseKey && purchaseKey >= dateFrom);
         const matchDateTo = !dateTo || (purchaseKey && purchaseKey <= dateTo);
@@ -193,7 +187,6 @@ const TicketsPage = () => {
         <div className="p-3 lg:p-4 bg-gray-50 min-h-screen">
             <div className="p-2 lg:p-4">
 
-                {/* En-tête */}
                 <div className="mb-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
                     <div className="flex items-center gap-3">
                         <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: GRADIENT }}>
