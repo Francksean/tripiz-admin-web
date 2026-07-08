@@ -1,6 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, Route, MapPin, Clock, FileText, AlertCircle } from 'lucide-react';
 
+const Field = ({ label, children }) => (
+    <div>
+        <label className="block text-xs text-gray-500 mb-1.5 font-medium">{label}</label>
+        {children}
+    </div>
+);
+
+const SectionHeader = ({ icon: Icon, title }) => (
+    <div className="flex items-center gap-2 mb-4">
+        <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+            <Icon className="w-3.5 h-3.5 text-blue-600" />
+        </div>
+        <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
+    </div>
+);
+
+const inputCls = `w-full px-3 py-2 text-sm border border-gray-200 rounded-lg
+    bg-white text-gray-800 placeholder-gray-400
+    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+    disabled:opacity-50 disabled:bg-gray-50 transition-colors`;
+
 const ItineraireEditModal = ({ itineraire, isOpen, onClose, onSave, stations = [] }) => {
     const [formData, setFormData] = useState({
         itinerary_name: '',
@@ -94,29 +115,6 @@ const ItineraireEditModal = ({ itineraire, isOpen, onClose, onSave, stations = [
         const station = stations.find(s => s.stationId === stationId);
         return station ? station.stationName : stationId;
     };
-
-    // ── Champ réutilisable ──────────────────────────────────────────────────
-    const Field = ({ label, children }) => (
-        <div>
-            <label className="block text-xs text-gray-500 mb-1.5 font-medium">{label}</label>
-            {children}
-        </div>
-    );
-
-    const inputCls = `w-full px-3 py-2 text-sm border border-gray-200 rounded-lg
-        bg-white text-gray-800 placeholder-gray-400
-        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-        disabled:opacity-50 disabled:bg-gray-50 transition-colors`;
-
-    // ── Séparateur de section ──────────────────────────────────────────────
-    const SectionHeader = ({ icon: Icon, title }) => (
-        <div className="flex items-center gap-2 mb-4">
-            <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
-                <Icon className="w-3.5 h-3.5 text-blue-600" />
-            </div>
-            <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
-        </div>
-    );
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
