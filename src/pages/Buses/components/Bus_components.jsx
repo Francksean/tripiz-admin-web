@@ -5,7 +5,7 @@ import {ModalDetails} from "./Detail_modal.jsx";
 import {stationService} from "../../../Services/StationService.js";
 import {busService} from "../../../Services/BusService.js";
 
-// ── Charte TRIPIZ (cohérente avec StatisticsPage.jsx) ───────────────────────
+
 const BRAND = {
     blue:      '#3A68C4',
     lightBlue: '#498BD2',
@@ -13,7 +13,6 @@ const BRAND = {
 };
 const GRADIENT = `linear-gradient(135deg, ${BRAND.blue} 0%, ${BRAND.lightBlue} 100%)`;
 
-// ── Carte de statistique (même style que StatisticsPage.jsx) ────────────────
 const StatCard = ({ label, value, Icon, accent, loading }) => (
     <div className="relative bg-white rounded-2xl p-5 shadow-sm border border-gray-100 overflow-hidden
         transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">

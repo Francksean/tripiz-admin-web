@@ -1,7 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import {
-    Bus, Users, Ticket, LogOut, Home, Route,
-    CreditCard, User, Map, ChevronLeft, ChevronRight
+    Bus, Users, Ticket, LogOut, Home, Route, User, Map, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import {connectionService} from "../../Services/Connexion.js";
 
@@ -14,7 +13,6 @@ export const TripizSidebar = ({ isCollapsed, onToggleCollapse, isMobile, onMobil
         if (isMobile) onMobileClose?.();
     };
 
-    // ── Fonction de déconnexion ──
     const handleLogout = () => {
         if (window.confirm("Êtes-vous sûr de vouloir vous déconnecter ?")) {
             connectionService.logout(); // Supprime les tokens du localStorage

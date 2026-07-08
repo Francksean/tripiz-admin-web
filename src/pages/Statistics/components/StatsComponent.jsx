@@ -6,7 +6,6 @@ import {
 } from 'lucide-react';
 import { dashboardService } from "../../../Services/DashboardService.js";
 
-// ── Charte TRIPIZ ──────────────────────────────────────────────────────────
 const BRAND = {
     blue:      '#3A68C4',
     lightBlue: '#498BD2',
@@ -18,7 +17,6 @@ const BRAND = {
 const GRADIENT = `linear-gradient(135deg, ${BRAND.blue} 0%, ${BRAND.lightBlue} 100%)`;
 const COLORS = [BRAND.blue, BRAND.lightBlue, '#F59E0B', '#EF4444', '#8B5CF6'];
 
-// Convertit le sélecteur de période UI -> paramètres attendus par l'API
 const getPeriodParams = (periodKey) => {
     const now = new Date();
     switch (periodKey) {
@@ -51,7 +49,6 @@ const formatDayLabel = (dateStr) => {
     }
 };
 
-// ── Petits composants de présentation ───────────────────────────────────────
 
 const Pulse = ({ className = '' }) => (
     <div className={`bg-gray-200/80 rounded animate-pulse ${className}`} />
@@ -127,7 +124,6 @@ const ChartCard = ({ title, Icon, iconColor = BRAND.blue, loading, empty, emptyL
     </div>
 );
 
-// ── Page principale ──────────────────────────────────────────────────────────
 const StatisticsPage = () => {
     const [selectedPeriod, setSelectedPeriod] = useState('7j');
     const [activeTab, setActiveTab] = useState('overview');
@@ -155,16 +151,56 @@ const StatisticsPage = () => {
 
     const handleExport = () => {
         if (!stats) return;
-        const blob = new Blob([JSON.stringify(stats, null, 2)], { type: 'application/json' });
+
+        const headers = ['Categorie', 'Metrique', 'Valeur', 'Periode'];
+
+        const rows = [
+            ['Vue d\'ensemble', 'Utilisateurs Actifs', stats.activeUsers ?? 0, selectedPeriod],
+            ['Vue d\'ensemble', 'Bus Actifs', stats.activeBuses ?? 0, selectedPeriod],
+            ['Vue d\'ensemble', 'Trajets sur la periode', stats.tripsToday ?? 0, selectedPeriod],
+            ['Vue d\'ensemble', 'Revenus sur la periode (FCFA)', stats.revenueToday ?? 0, selectedPeriod],
+
+            ['Tickets', 'Tickets Vendus', stats.ticketsSoldToday ?? 0, selectedPeriod],
+            ['Tickets', 'Tickets Utilises', stats.ticketsUsedToday ?? 0, selectedPeriod],
+            ['Tickets', 'Tickets Expires', stats.ticketsExpiredToday ?? 0, selectedPeriod],
+            ['Tickets', 'Taux d\'Utilisation (%)', `${(stats.ticketUsageRate ?? 0).toFixed(1)}%`, selectedPeriod],
+
+            ['Portefeuilles', 'Solde Total Wallets (FCFA)', stats.totalWalletBalance ?? 0, selectedPeriod],
+            ['Portefeuilles', 'Recharges sur la periode', stats.walletRechargesToday ?? 0, selectedPeriod],
+            ['Portefeuilles', 'Montant Recharge (FCFA)', stats.rechargeAmountToday ?? 0, selectedPeriod],
+            ['Portefeuilles', 'Wallets Actifs', stats.activeWallets ?? 0, selectedPeriod]
+        ];
+
+        if (stats.salesByLine && stats.salesByLine.length > 0) {
+            rows.push(['', '', '', '']);
+            stats.salesByLine.forEach(l => {
+                rows.push(['Details par ligne', `Ventes sur ligne: ${l.tripName}`, `${l.passengerCount} passagers`, selectedPeriod]);
+            });
+        }
+
+        if (stats.paymentMethodUsage && stats.paymentMethodUsage.length > 0) {
+            rows.push(['', '', '', '']);
+            stats.paymentMethodUsage.forEach(p => {
+                rows.push(['Moyens de paiement', p.paymentMethod, `${p.count} transactions (${p.percentage.toFixed(1)}%)`, selectedPeriod]);
+            });
+        }
+
+        const csvContent = "\uFEFF"
+            + [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `tripiz-stats-${selectedPeriod}.json`;
+        a.download = `tripiz-stats-${selectedPeriod}.csv`;
+        document.body.appendChild(a);
         a.click();
+
+        // 5. Nettoyage
+        document.body.removeChild(a);
         URL.revokeObjectURL(url);
     };
 
-    // ---- Données dérivées des vraies stats ----
 
     const generalStats = [
         { label: 'Utilisateurs Actifs', value: stats?.activeUsers ?? 0, Icon: Users, accent: { bar: GRADIENT, bg: `${BRAND.blue}14`, icon: BRAND.blue } },
