@@ -3,8 +3,7 @@ import { createPortal } from 'react-dom';
 import { Bus, Navigation, X, Save, MapPin } from 'lucide-react';
 import LocationAutocomplete from "./LocationAutoCompletion.jsx";
 
-// ── Composants définis HORS du composant principal pour éviter
-//    la perte de focus à chaque keystroke ─────────────────────────────────────
+
 const Field = ({ label, error, children }) => (
     <div>
         <label className="block text-xs font-medium text-gray-500 mb-1.5">{label}</label>

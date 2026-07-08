@@ -341,8 +341,8 @@ const BusStationsPage = () => {
                                 <option>Tous les statuts</option>
                                 {activeTab === 'bus' ? (
                                     <>
-                                        <option>En service</option>
-                                        <option>En maintenance</option>
+                                        <option value="En service">En service</option>
+                                        <option value="En maintenance">En Maintenance</option>
                                     </>
                                 ) : (
                                     <>
