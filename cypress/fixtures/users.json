@@ -1,0 +1,41 @@
+[
+  {
+    "user_id": "usr_001",
+    "firstName": "Kouam",
+    "first_name": "Kouam",
+    "lastName": "Bertrand",
+    "last_name": "Bertrand",
+    "name": "Kouam Bertrand",
+    "email": "kouam.bertrand@tripiz.cm",
+    "phone": "+237690000001",
+    "role": "DRIVER",
+    "status": "online",
+    "createdAt": "2026-06-01T10:00:00Z"
+  },
+  {
+    "user_id": "usr_002",
+    "firstName": "Mbarga",
+    "first_name": "Mbarga",
+    "lastName": "Sylvie",
+    "last_name": "Sylvie",
+    "name": "Mbarga Sylvie",
+    "email": "mbarga.sylvie@tripiz.cm",
+    "phone": "+237690000002",
+    "role": "DRIVER",
+    "status": "blocked",
+    "createdAt": "2026-07-05T08:30:00Z"
+  },
+  {
+    "user_id": "usr_003",
+    "firstName": "Foko",
+    "first_name": "Foko",
+    "lastName": "Jean-Pierre",
+    "last_name": "Jean-Pierre",
+    "name": "Foko Jean-Pierre",
+    "email": "foko.jp@tripiz.cm",
+    "phone": "+237690000003",
+    "role": "PASSENGER",
+    "status": "online",
+    "createdAt": "2026-07-08T14:00:00Z"
+  }
+]

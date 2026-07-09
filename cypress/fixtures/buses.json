@@ -1,0 +1,16 @@
+[
+  {
+    "id": "bus_001",
+    "busNumber": "B001",
+    "matriculation": "LT 2345 A",
+    "capacity": 20,
+    "status": "En service"
+  },
+  {
+    "id": "bus_002",
+    "busNumber": "B002",
+    "matriculation": "LT 6789 B",
+    "capacity": 14,
+    "status": "En maintenance"
+  }
+]
