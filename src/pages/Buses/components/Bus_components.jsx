@@ -125,7 +125,7 @@ const BusStationsPage = () => {
         ? [
             { label: 'En Service',       value: busStats.enService,       Icon: CheckCircle,  accent: { bar: 'linear-gradient(135deg, #16A34A, #4ADE80)', bg: '#16A34A14', icon: '#16A34A' } },
             { label: 'En Maintenance',   value: busStats.enMaintenance,   Icon: AlertTriangle, accent: { bar: 'linear-gradient(135deg, #F59E0B, #FBBF24)', bg: '#F59E0B14', icon: '#F59E0B' } },
-            { label: 'Capacité Totale',  value: busStats.capaciteTotale,  Icon: Users,         accent: { bar: 'linear-gradient(135deg, #8B5CF6, #A78BFA)', bg: '#8B5CF614', icon: '#8B5CF6' } },
+            { label: 'Capacité Totale Bus en Service',  value: busStats.capaciteTotale,  Icon: Users,         accent: { bar: 'linear-gradient(135deg, #8B5CF6, #A78BFA)', bg: '#8B5CF614', icon: '#8B5CF6' } },
         ]
         : [
             { label: 'Total Stations',   value: stationStats.total,          Icon: MapPinned,    accent: { bar: GRADIENT, bg: `${BRAND.blue}14`, icon: BRAND.blue } },
