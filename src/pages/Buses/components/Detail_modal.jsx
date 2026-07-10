@@ -81,7 +81,7 @@ export const ModalDetails = ({ activeTab, showDetailsModal, setShowDetailsModal,
                         </div>
                         <div className="min-w-0">
                             <h2 className="text-sm font-semibold text-gray-900 truncate">
-                                {isBus ? `Bus #${detailsItem.busNumber}` : detailsItem.stationName}
+                                {isBus ? `Bus : ${detailsItem.busNumber}` : detailsItem.stationName}
                             </h2>
                             <p className="text-xs text-gray-400 mt-0.5 truncate">
                                 {isBus ? detailsItem.matriculation : formatStatus(detailsItem.stationType)}
