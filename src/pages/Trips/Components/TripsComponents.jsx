@@ -162,7 +162,7 @@ const TripsManagement = () => {
             const s = statsData.status === 'fulfilled' ? statsData.value : {};
             const t = totalTrips.status === 'fulfilled' ? totalTrips.value : 0;
 
-            const totalValue = typeof t === 'number' ? t : (t?.count ?? 0);
+            const totalValue = typeof t === 'number' ? t : 0;
             const activeValue = s.ongoing ?? 0;
             const completedValue = s.completed ?? 0;
 

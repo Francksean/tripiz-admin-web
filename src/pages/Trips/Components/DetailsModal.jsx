@@ -51,7 +51,7 @@ export const TripDetailModal = ({ trip, isOpen, onClose, onEdit, resolveBus, res
                         </div>
                         <div>
                             <h2 className="text-sm font-semibold text-gray-900">
-                                Trajet <span className="text-gray-400 font-normal">#{trip.trip_id || trip.id}</span>
+                                Trajet :  <span className="text-gray-400 font-normal">{itiLabel}</span>
                             </h2>
                             <p className="text-xs text-gray-400 mt-0.5">{trip.trip_date}</p>
                         </div>

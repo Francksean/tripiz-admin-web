@@ -67,39 +67,29 @@ export const trajetService = {
         }
     },
 
-    countAllPassengers: async () => {
-        try {
-            const response = await api.request('/trip/admin/countAllPassengers', {
-                method: 'GET',
-            });
-            return response && typeof response.count !== 'undefined' ? response : { count: 0 };
-        } catch (error) {
-            console.warn('Impossible de récupérer le nombre total de passagers:', error);
-            return { count: 0 };
-        }
-    },
-
-    countTrips: async (direction) => {
+    countTrips: async () => {
         try {
             const response = await api.request(`/trip/admin/countAllTrips`, {
                 method: 'GET',
             });
-            return response && typeof response.count !== 'undefined' ? response : { count: 0 };
+            // La réponse est un nombre brut
+            return typeof response === 'number' ? response : (response?.count ?? 0);
         } catch (error) {
-            console.warn(`Impossible de récupérer le nombre total des trajets ${direction}:`, error);
-            return { count: 0 };
+            console.warn('Impossible de récupérer le nombre total des trajets:', error);
+            return 0;
         }
     },
 
-    getStatistics: async (direction) => {
+    getStatistics: async () => {
         try {
             const response = await api.request(`/trip/admin/getStatistics`, {
                 method: 'GET',
             });
-            return response && typeof response.count !== 'undefined' ? response : { count: 0 };
+            // La réponse est déjà l'objet { programmed, ongoing, completed, cancelled }
+            return response || { programmed: 0, ongoing: 0, completed: 0, cancelled: 0 };
         } catch (error) {
-            console.warn(`Impossible de récupérer les statistiques ${direction}:`, error);
-            return { count: 0 };
+            console.warn('Impossible de récupérer les statistiques:', error);
+            return { programmed: 0, ongoing: 0, completed: 0, cancelled: 0 };
         }
     },
 

@@ -37,8 +37,6 @@ const ItineraireDetailsModal = ({ itineraire, isOpen, onClose, stations = [] }) 
                             <h2 className="text-sm font-semibold text-gray-900 truncate">{itineraireName}</h2>
                             <p className="text-xs text-gray-400 mt-0.5 truncate">
                                 {routeName}
-                                <span className="mx-1.5">·</span>
-                                ID : {itineraireId}
                             </p>
                         </div>
                     </div>
