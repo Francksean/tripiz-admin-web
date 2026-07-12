@@ -32,6 +32,7 @@ const ItineraireAddModal = ({ isOpen, onClose, onSubmit, stations = [], loadingS
         arrival_station: '',
         distance: '',
         estimated_duration: '',
+        ticketPrice: '',
     });
     const [errors, setErrors] = useState([]);
     const [submitting, setSubmitting] = useState(false);
@@ -47,6 +48,7 @@ const ItineraireAddModal = ({ isOpen, onClose, onSubmit, stations = [], loadingS
                 arrival_station: '',
                 distance: '',
                 estimated_duration: '',
+                ticketPrice: '',
             });
             setErrors([]);
             setSubmitting(false);
@@ -75,6 +77,8 @@ const ItineraireAddModal = ({ isOpen, onClose, onSubmit, stations = [], loadingS
             errs.push('La distance doit être un nombre positif');
         if (!formData.estimated_duration || parseInt(formData.estimated_duration) <= 0)
             errs.push('La durée estimée doit être un nombre positif');
+        if (!formData.ticketPrice || parseInt(formData.ticketPrice) <= 0)
+            errs.push('La prix du ticket doit être un nombre positif');
         return errs;
     };
 
@@ -94,6 +98,7 @@ const ItineraireAddModal = ({ isOpen, onClose, onSubmit, stations = [], loadingS
                 arrival_station:    formData.arrival_station,
                 distance:           parseFloat(formData.distance),
                 estimated_duration: parseInt(formData.estimated_duration),
+                ticketPrice: parseInt(formData.ticketPrice),
             });
             onClose();
         } catch (err) {
@@ -244,7 +249,7 @@ const ItineraireAddModal = ({ isOpen, onClose, onSubmit, stations = [], loadingS
                     {/* ── Détails du parcours ── */}
                     <div className="bg-gray-50 rounded-xl p-4 space-y-3">
                         <SectionHeader icon={Clock} title="Détails du parcours" />
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-3 gap-3">
                             <Field label="Distance *">
                                 <div className="relative">
                                     <input
@@ -273,6 +278,21 @@ const ItineraireAddModal = ({ isOpen, onClose, onSubmit, stations = [], loadingS
                                         disabled={submitting}
                                     />
                                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">min</span>
+                                </div>
+                            </Field>
+                            <Field label="Prix *">
+                                <div className="relative">
+                                    <input
+                                        type="number"
+                                        name="ticketPrice"
+                                        value={formData.ticketPrice}
+                                        onChange={handleChange}
+                                        min="1"
+                                        placeholder="45"
+                                        className={`${inputCls} pr-12`}
+                                        disabled={submitting}
+                                    />
+                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">FCFA</span>
                                 </div>
                             </Field>
                         </div>

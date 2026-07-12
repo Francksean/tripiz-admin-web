@@ -262,13 +262,6 @@ const TripsManagement = () => {
                     </button>
                 </div>
 
-                {/* Erreur */}
-                {error && (
-                    <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm flex justify-between">
-                        <span>{error}</span>
-                        <button onClick={loadAll} className="underline font-medium">Réessayer</button>
-                    </div>
-                )}
 
                 {/* Stats */}
                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-5">
