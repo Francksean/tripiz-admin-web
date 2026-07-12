@@ -21,7 +21,7 @@ const TripizParameter = () => {
     };
 
     return (
-        <div className="h-screen flex bg-gradient-to-br from-gray-50 to-blue-50 overflow-hidden">
+        <div className="h-dvh flex bg-gradient-to-br from-gray-50 to-blue-50 overflow-hidden">
             <TripizSidebar
                 activeItem={activeItem}
                 onItemClick={setActiveItem}
@@ -30,7 +30,7 @@ const TripizParameter = () => {
             />
             {/* Main Content */}
             <div className="flex-1 overflow-y-auto">
-                <ParamManagement />
+                <ParamManagement/>
             </div>
         </div>
     );
