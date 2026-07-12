@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import {
-    Bus, Users, Ticket, LogOut, Home, Route, User, Map, ChevronLeft, ChevronRight
+    Bus, Users, Ticket, LogOut, Home, Route, User, Map, ChevronLeft, ChevronRight, Settings
 } from 'lucide-react';
 import {connectionService} from "../../Services/Connexion.js";
 
@@ -31,7 +31,7 @@ export const TripizSidebar = ({ isCollapsed, onToggleCollapse, isMobile, onMobil
         { id: 'routes',    icon: Route,      label: 'Itinéraires' },
         { id: 'trips',     icon: Map,        label: 'Trajets' },
         { id: 'tickets',   icon: Ticket, label: 'Billets' },
-        // { id: 'stats',     icon: BarChart3,  label: 'Statistiques' },
+        { id: 'settings',     icon: Settings,  label: 'Parametre' },
     ];
 
     const collapsed = isCollapsed && !isMobile;
