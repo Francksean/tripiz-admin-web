@@ -80,8 +80,8 @@ const ItineraireEditModal = ({ itineraire, isOpen, onClose, onSave, stations = [
             newErrors.push('La distance doit être un nombre positif');
         if (!formData.estimated_duration || parseInt(formData.estimated_duration) <= 0)
             newErrors.push('La durée estimée doit être un nombre positif');
-        if (!formData.ticketPrice || parseInt(formData.ticketPrice) <= 0)
-            newErrors.push('La prix du ticket doit être un nombre positif');
+        if (formData.ticketPrice !== '' && parseInt(formData.ticketPrice) < 0)
+            newErrors.push('Le prix du ticket ne peut pas être négatif');
         return newErrors;
     };
 
@@ -104,8 +104,9 @@ const ItineraireEditModal = ({ itineraire, isOpen, onClose, onSave, stations = [
                 estimated_duration: parseInt(formData.estimated_duration),
                 // On renvoie ticket_price (nom attendu par le backend), en gardant
                 // ticketPrice aussi au cas où un endpoint attendrait le camelCase.
-                ticket_price: parseInt(formData.ticketPrice),
-                ticketPrice:  parseInt(formData.ticketPrice),
+                // Champ vide => null (permet de ne pas fixer de prix).
+                ticket_price: formData.ticketPrice === '' ? null : parseInt(formData.ticketPrice),
+                ticketPrice:  formData.ticketPrice === '' ? null : parseInt(formData.ticketPrice),
             };
             await onSave(updatedItineraire);
             onClose();
@@ -313,17 +314,16 @@ const ItineraireEditModal = ({ itineraire, isOpen, onClose, onSave, stations = [
                                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">min</span>
                                 </div>
                             </Field>
-                            <Field label="Prix *">
+                            <Field label="Prix">
                                 <div className="relative">
                                     <input
                                         type="number"
                                         name="ticketPrice"
                                         value={formData.ticketPrice}
                                         onChange={handleInputChange}
-                                        min="1"
-                                        placeholder="45"
+                                        min="0"
+                                        placeholder="Non défini"
                                         className={`${inputCls} pr-12`}
-                                        required
                                         disabled={isLoading}
                                     />
                                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">FCFA</span>
