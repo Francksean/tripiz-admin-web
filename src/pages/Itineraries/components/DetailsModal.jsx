@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, Clock, X, Route, Navigation, Timer } from 'lucide-react';
+import { MapPin, Clock, X, Route, Navigation, Timer, Wallet } from 'lucide-react';
 
 const ItineraireDetailsModal = ({ itineraire, isOpen, onClose, stations = [] }) => {
     if (!isOpen || !itineraire) return null;
@@ -16,6 +16,7 @@ const ItineraireDetailsModal = ({ itineraire, isOpen, onClose, stations = [] }) 
     const distance       = itineraire.distance || 0;
     const duration       = itineraire.estimated_duration || 0;
     const direction      = itineraire.direction || 'N/A';
+    const ticketPrice    = itineraire.ticketPrice ?? itineraire.ticket_price ?? 0;
     const avgSpeed       = duration > 0 ? Math.round((distance / duration) * 60) : 0;
     const hours          = Math.floor(duration / 60);
     const minutes        = duration % 60;
@@ -61,11 +62,12 @@ const ItineraireDetailsModal = ({ itineraire, isOpen, onClose, stations = [] }) 
                 <div className="px-5 py-4 space-y-4">
 
                     {/* ── Métriques ── */}
-                    <div className="grid grid-cols-3 gap-2.5">
+                    <div className="grid grid-cols-2 gap-2.5">
                         {[
                             { icon: Navigation, label: 'Distance', value: distance, unit: 'km',   color: 'text-blue-600',   bg: 'bg-blue-50' },
                             { icon: Timer,      label: 'Durée',    value: durationLabel, unit: null, color: 'text-green-600',  bg: 'bg-green-50' },
                             { icon: Clock,      label: 'Vitesse moy.', value: avgSpeed, unit: 'km/h', color: 'text-purple-600', bg: 'bg-purple-50' },
+                            { icon: Wallet,     label: 'Prix',     value: ticketPrice, unit: 'FCFA', color: 'text-amber-600', bg: 'bg-amber-50' },
                         ].map(({ icon: Icon, label, value, unit, color, bg }) => (
                             <div key={label} className="bg-gray-50 rounded-xl p-3">
                                 <div className={`w-7 h-7 ${bg} rounded-lg flex items-center justify-center mb-2`}>

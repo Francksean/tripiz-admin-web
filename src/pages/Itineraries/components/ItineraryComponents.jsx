@@ -218,6 +218,7 @@ const ItinerairesPage = () => {
                                 <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Itinéraire</th>
                                 <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Parcours</th>
                                 <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Détails</th>
+                                <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Prix</th>
                                 <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Actions</th>
                             </tr>
                             </thead>
@@ -237,7 +238,8 @@ const ItinerairesPage = () => {
                                 ))
                             ) : (
                                 filteredItineraires.map((it) => (
-                                    <tr key={it.itinerary_id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                                    <tr key={it.itinerary_id}
+                                        className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                                         <td className="py-3 px-4">
                                             <div className="font-semibold text-gray-800 text-sm">
                                                 {it.itinerary_name || it.itenary_name || 'Sans nom'}
@@ -250,14 +252,14 @@ const ItinerairesPage = () => {
                                         <td className="py-3 px-4">
                                             <div className="space-y-1.5">
                                                 <div className="flex items-center gap-1.5 text-xs">
-                                                    <MapPin size={11} className="text-green-500 flex-shrink-0" />
+                                                    <MapPin size={11} className="text-green-500 flex-shrink-0"/>
                                                     <span className="text-gray-700 font-medium truncate max-w-[120px]">
                                                             {getStationNameById(it.departure_station)}
                                                         </span>
                                                 </div>
-                                                <ArrowRight size={12} className="text-gray-300 ml-1" />
+                                                <ArrowRight size={12} className="text-gray-300 ml-1"/>
                                                 <div className="flex items-center gap-1.5 text-xs">
-                                                    <MapPin size={11} className="text-red-500 flex-shrink-0" />
+                                                    <MapPin size={11} className="text-red-500 flex-shrink-0"/>
                                                     <span className="text-gray-700 font-medium truncate max-w-[120px]">
                                                             {getStationNameById(it.arrival_station)}
                                                         </span>
@@ -265,8 +267,14 @@ const ItinerairesPage = () => {
                                             </div>
                                         </td>
                                         <td className="py-3 px-4 text-xs text-gray-700 space-y-1">
-                                            <div><span className="font-medium">Distance :</span> {it.distance || 0} km</div>
-                                            <div><span className="font-medium">Durée :</span> {it.estimated_duration || 0} min</div>
+                                            <div><span className="font-medium">Distance :</span> {it.distance || 0} km
+                                            </div>
+                                            <div><span
+                                                className="font-medium">Durée :</span> {it.estimated_duration || 0} min
+                                            </div>
+                                        </td>
+                                        <td className="py-3 px-4 text-xs text-gray-700 space-y-1">
+                                            <div><span className="font-medium">Prix :</span> {it.ticket_price || 0.0} FCFA</div>
                                         </td>
                                         <td className="py-3 px-4">
                                             <div className="flex items-center gap-1">
@@ -275,21 +283,21 @@ const ItinerairesPage = () => {
                                                     className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
                                                     title="Voir détails"
                                                 >
-                                                    <Eye size={14} />
+                                                    <Eye size={14}/>
                                                 </button>
                                                 <button
                                                     onClick={() => handleEditItineraire(it)}
                                                     className="p-1.5 text-gray-600 hover:bg-gray-100 rounded transition-colors"
                                                     title="Modifier"
                                                 >
-                                                    <Edit size={14} />
+                                                    <Edit size={14}/>
                                                 </button>
                                                 <button
                                                     onClick={() => handleDeleteItineraire(it.itinerary_id || it.itinary_id)}
                                                     className="p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors"
                                                     title="Supprimer"
                                                 >
-                                                    <Trash2 size={14} />
+                                                    <Trash2 size={14}/>
                                                 </button>
                                             </div>
                                         </td>

@@ -31,7 +31,7 @@ const ItineraireEditModal = ({ itineraire, isOpen, onClose, onSave, stations = [
         arrival_station: '',
         distance: '',
         estimated_duration: '',
-        status: 'EN_COURS',
+        ticketPrice: '',
     });
 
     const [isLoading, setIsLoading] = useState(false);
@@ -47,7 +47,9 @@ const ItineraireEditModal = ({ itineraire, isOpen, onClose, onSave, stations = [
                 arrival_station: itineraire.arrival_station || '',
                 distance: itineraire.distance || '',
                 estimated_duration: itineraire.estimated_duration || '',
-                status: itineraire.status || 'ACTIVE',
+                // Le backend renvoie "ticket_price" (snake_case) — on garde ticketPrice en fallback
+                // au cas où d'autres endpoints renverraient du camelCase.
+                ticketPrice: itineraire.ticket_price ?? itineraire.ticketPrice ?? '',
             });
         }
     }, [itineraire]);
@@ -78,6 +80,8 @@ const ItineraireEditModal = ({ itineraire, isOpen, onClose, onSave, stations = [
             newErrors.push('La distance doit être un nombre positif');
         if (!formData.estimated_duration || parseInt(formData.estimated_duration) <= 0)
             newErrors.push('La durée estimée doit être un nombre positif');
+        if (!formData.ticketPrice || parseInt(formData.ticketPrice) <= 0)
+            newErrors.push('La prix du ticket doit être un nombre positif');
         return newErrors;
     };
 
@@ -98,7 +102,10 @@ const ItineraireEditModal = ({ itineraire, isOpen, onClose, onSave, stations = [
                 arrival_station:    formData.arrival_station,
                 distance:           parseFloat(formData.distance),
                 estimated_duration: parseInt(formData.estimated_duration),
-                status:             formData.status,
+                // On renvoie ticket_price (nom attendu par le backend), en gardant
+                // ticketPrice aussi au cas où un endpoint attendrait le camelCase.
+                ticket_price: parseInt(formData.ticketPrice),
+                ticketPrice:  parseInt(formData.ticketPrice),
             };
             await onSave(updatedItineraire);
             onClose();
@@ -272,7 +279,7 @@ const ItineraireEditModal = ({ itineraire, isOpen, onClose, onSave, stations = [
                     {/* ── Section : Détails du parcours ── */}
                     <section>
                         <SectionHeader icon={Clock} title="Détails du parcours" />
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <Field label="Distance *">
                                 <div className="relative">
                                     <input
@@ -304,6 +311,22 @@ const ItineraireEditModal = ({ itineraire, isOpen, onClose, onSave, stations = [
                                         disabled={isLoading}
                                     />
                                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">min</span>
+                                </div>
+                            </Field>
+                            <Field label="Prix *">
+                                <div className="relative">
+                                    <input
+                                        type="number"
+                                        name="ticketPrice"
+                                        value={formData.ticketPrice}
+                                        onChange={handleInputChange}
+                                        min="1"
+                                        placeholder="45"
+                                        className={`${inputCls} pr-12`}
+                                        required
+                                        disabled={isLoading}
+                                    />
+                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">FCFA</span>
                                 </div>
                             </Field>
                         </div>
