@@ -77,8 +77,8 @@ const ItineraireAddModal = ({ isOpen, onClose, onSubmit, stations = [], loadingS
             errs.push('La distance doit être un nombre positif');
         if (!formData.estimated_duration || parseInt(formData.estimated_duration) <= 0)
             errs.push('La durée estimée doit être un nombre positif');
-        if (!formData.ticketPrice || parseInt(formData.ticketPrice) <= 0)
-            errs.push('La prix du ticket doit être un nombre positif');
+        if (formData.ticketPrice !== '' && parseInt(formData.ticketPrice) < 0)
+            errs.push('Le prix du ticket ne peut pas être négatif');
         return errs;
     };
 
@@ -287,7 +287,7 @@ const ItineraireAddModal = ({ isOpen, onClose, onSubmit, stations = [], loadingS
                                         name="ticketPrice"
                                         value={formData.ticketPrice}
                                         onChange={handleChange}
-                                        min="1"
+                                        min="0"
                                         placeholder="45"
                                         className={`${inputCls} pr-12`}
                                         disabled={submitting}
