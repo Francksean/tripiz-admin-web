@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Settings, Building2, Image as ImageIcon, DollarSign, Edit, RefreshCw, AlertTriangle, Link2 } from 'lucide-react';
+import { Settings, Building2, Image as ImageIcon, DollarSign, Edit, RefreshCw, AlertTriangle, Link2, ChevronRight } from 'lucide-react';
 import {parameterService} from "../../../Services/AdminConfig.js";
 import ConfigEditModal from "./EditModal.jsx";
 
@@ -15,7 +15,30 @@ const GRADIENT = `linear-gradient(135deg, ${BRAND.blue} 0%, ${BRAND.lightBlue} 1
 const formatFCFA = (value) => `${Number(value ?? 0).toLocaleString('fr-FR')} FCFA`;
 
 const Pulse = ({ className = '' }) => (
+    <div className={`bg-gray-200/70 rounded animate-pulse ${className}`} />
+);
+
+const PulseLight = ({ className = '' }) => (
     <div className={`bg-white/25 rounded animate-pulse ${className}`} />
+);
+
+// Ligne de réglage réutilisable, façon "settings list"
+const SettingRow = ({ Icon, iconColor, label, description, children, isLast }) => (
+    <div className={`flex items-start sm:items-center justify-between gap-4 py-5 px-1 ${!isLast ? 'border-b border-gray-100' : ''}`}>
+        <div className="flex items-start sm:items-center gap-3.5 min-w-0">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 sm:mt-0"
+                 style={{ background: `${iconColor}14` }}>
+                <Icon className="w-4.5 h-4.5" style={{ color: iconColor }} />
+            </div>
+            <div className="min-w-0">
+                <p className="text-sm font-semibold" style={{ color: BRAND.dark }}>{label}</p>
+                {description && <p className="text-xs text-gray-400 mt-0.5">{description}</p>}
+            </div>
+        </div>
+        <div className="flex-shrink-0 text-right">
+            {children}
+        </div>
+    </div>
 );
 
 const ParamManagement = () => {
@@ -56,117 +79,112 @@ const ParamManagement = () => {
 
     return (
         <div className="p-4 bg-gray-50 min-h-screen">
-            <div className="p-2 lg:p-4 max-w-4xl">
+            <div className="p-2 lg:p-4">
 
                 {/* En-tête de page */}
-                <div className="mb-6 flex items-center justify-between gap-4">
+                <div className="mb-6 lg:mb-8 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: GRADIENT }}>
-                            <Settings className="w-5 h-5 text-white" />
+                        <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+                             style={{background: GRADIENT}}>
+                            <Settings className="w-5 h-5 text-white"/>
                         </div>
-                        <div>
-                            <h1 className="text-xl lg:text-2xl font-bold" style={{ color: BRAND.dark }}>Paramètres</h1>
+                        <div className="min-w-0">
+                            <h1 className="text-xl lg:text-2xl font-bold" style={{color: BRAND.dark}}>Paramètres</h1>
                             <p className="text-gray-500 mt-0.5 text-sm">Configuration générale de l'entreprise</p>
                         </div>
                     </div>
-
-                    {error && (
-                        <button
-                            onClick={fetchConfig}
-                            className="hidden sm:flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors"
-                        >
-                            <RefreshCw className="w-3.5 h-3.5" />
-                            Réessayer
-                        </button>
-                    )}
                 </div>
 
-                <div className="relative mb-14">
-                    <div className="rounded-2xl overflow-hidden shadow-sm" style={{ background: GRADIENT }}>
-                        <div className="px-6 sm:px-8 pt-7 pb-14 flex items-start justify-between gap-4">
-                            <div className="min-w-0">
-                                <p className="text-white/70 text-[11px] font-medium uppercase tracking-wider mb-1.5">Profil de l'entreprise</p>
+                {/* Contenu : profil à gauche, réglages à droite */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-5xl">
+
+                    {/* Carte profil entreprise */}
+                    <div className="lg:col-span-1 rounded-2xl overflow-hidden shadow-sm" style={{ background: GRADIENT }}>
+                        <div className="px-6 pt-8 pb-7 flex flex-col items-center text-center">
+                            <div className="w-20 h-20 rounded-2xl bg-white shadow-lg flex items-center justify-center overflow-hidden mb-4">
                                 {loading ? (
-                                    <Pulse className="h-8 w-48" />
+                                    <div className="w-full h-full bg-gray-100 animate-pulse"/>
+                                ) : hasLogo ? (
+                                    <img
+                                        src={config.logoUrl}
+                                        alt={config.companyName || 'Logo'}
+                                        className="w-full h-full object-contain p-1.5"
+                                        onError={() => setLogoError(true)}
+                                    />
                                 ) : (
-                                    <h2 className="text-white text-2xl font-bold truncate">{config?.companyName || 'Non défini'}</h2>
+                                    <Building2 className="w-8 h-8" style={{ color: BRAND.blue }}/>
                                 )}
                             </div>
+
+                            <p className="text-white/70 text-[11px] font-medium uppercase tracking-wider mb-1.5">
+                                Profil de l'entreprise
+                            </p>
+                            {loading ? (
+                                <PulseLight className="h-7 w-32 mx-auto"/>
+                            ) : (
+                                <h2 className="text-white text-xl font-bold truncate max-w-full">
+                                    {config?.companyName || 'Non défini'}
+                                </h2>
+                            )}
+
                             <button
                                 onClick={() => setShowEditModal(true)}
                                 disabled={loading || !config}
-                                className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl bg-white/15 text-white
-                                    border border-white/25 hover:bg-white/25 transition-colors flex-shrink-0
+                                className="mt-6 w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl bg-white/15 text-white
+                                    border border-white/25 hover:bg-white/25 transition-colors
                                     disabled:opacity-40 disabled:hover:bg-white/15"
                             >
-                                <Edit className="w-4 h-4" />
-                                <span className="hidden sm:inline">Modifier</span>
+                                <Edit className="w-4 h-4"/>
+                                Modifier
                             </button>
                         </div>
                     </div>
 
-                    {/* Avatar / logo — plus jamais coupé, quel que soit son contenu */}
-                    <div className="absolute left-6 sm:left-8 -bottom-10 w-20 h-20 rounded-2xl bg-white border-4 border-gray-50 shadow-lg
-                        flex items-center justify-center overflow-hidden">
-                        {loading ? (
-                            <div className="w-full h-full bg-gray-100 animate-pulse" />
-                        ) : hasLogo ? (
-                            <img
-                                src={config.logoUrl}
-                                alt={config.companyName || 'Logo'}
-                                className="w-full h-full object-contain p-1.5"
-                                onError={() => setLogoError(true)}
-                            />
-                        ) : (
-                            <Building2 className="w-8 h-8" style={{ color: BRAND.blue }} />
-                        )}
-                    </div>
-                </div>
-
-                {/* ── Détails de configuration ── */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-                    <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-                        <div className="flex items-center gap-2 mb-3">
-                            <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: '#F59E0B14' }}>
-                                <DollarSign className="w-4 h-4" style={{ color: '#F59E0B' }} />
-                            </div>
-                            <p className="text-xs font-medium text-gray-500 tracking-wide">Prix par défaut du ticket</p>
+                    {/* Liste des réglages */}
+                    <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 px-5 sm:px-6">
+                        <div className="flex items-center justify-between pt-5 pb-1">
+                            <h3 className="text-sm font-semibold" style={{ color: BRAND.dark }}>Configuration générale</h3>
                         </div>
-                        {loading ? (
-                            <Pulse className="h-8 w-28 !bg-gray-100" />
-                        ) : (
-                            <p className="text-2xl font-bold" style={{ color: BRAND.dark }}>
-                                {formatFCFA(config?.defaultTicketPrice)}
-                            </p>
-                        )}
-                    </div>
 
-                    <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-                        <div className="flex items-center gap-2 mb-3">
-                            <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: '#8B5CF614' }}>
-                                <ImageIcon className="w-4 h-4" style={{ color: '#8B5CF6' }} />
-                            </div>
-                            <p className="text-xs font-medium text-gray-500 tracking-wide">Logo</p>
-                        </div>
-                        {loading ? (
-                            <Pulse className="h-5 w-40 !bg-gray-100" />
-                        ) : config?.logoUrl ? (
-                            <a
-                                href={config.logoUrl}
+                        <SettingRow
+                            Icon={DollarSign}
+                            iconColor="#F59E0B"
+                            label="Prix par défaut du ticket"
+                            description="Appliqué à tous les nouveaux trajets"
+                        >
+                            {loading ? (
+                                <Pulse className="h-6 w-24 ml-auto"/>
+                            ) : (
+                                <span className="text-base font-bold" style={{ color: BRAND.dark }}>
+                                    {formatFCFA(config?.defaultTicketPrice)}
+                                </span>
+                            )}
+                        </SettingRow>
+
+                        <SettingRow
+                            Icon={ImageIcon}
+                            iconColor="#8B5CF6"
+                            label="Logo de l'entreprise"
+                            description={!loading && logoError && config?.logoUrl ? "L'image n'a pas pu être chargée" : "Utilisé sur les tickets"}
+                            isLast
+                        >
+                            {loading ? (
+                                <Pulse className="h-5 w-28 ml-auto"/>
+                            ) : config?.logoUrl ? (
+                                <a
+                                    href={config.logoUrl}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="text-sm text-blue-600 hover:underline break-all inline-flex items-start gap-1.5"
-                            >
-                                <Link2 className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
-                                {config.logoUrl}
-                            </a>
-                        ) : (
-                            <p className="text-sm text-gray-400">Aucun logo configuré</p>
-                        )}
-                        {!loading && logoError && config?.logoUrl && (
-                            <p className="text-xs text-red-500 mt-2">L'image n'a pas pu être chargée depuis cette URL.</p>
-                        )}
+                                className="text-sm font-medium hover:underline inline-flex items-center gap-1.5 justify-end max-w-[220px]"
+                                style={{ color: BRAND.blue }}
+                                >
+                                <Link2 className="w-3.5 h-3.5 flex-shrink-0"/>
+                                <span className="truncate">Voir le fichier</span>
+                                </a>
+                                ) : (
+                                <span className="text-sm text-gray-400">Non configuré</span>
+                                )}
+                        </SettingRow>
                     </div>
                 </div>
             </div>
